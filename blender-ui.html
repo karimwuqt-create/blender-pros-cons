@@ -1,0 +1,1586 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blender Фан-сайт</title>
+<meta name="description" content="Фан-сайт про Blender с интерфейсом как в самом Blender: 3D-вьюпорт, модели, горячие клавиши, история.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gap:#141414; --top:#1d1d1d; --hdr:#303030; --area:#2b2b2b; --vp:#393939;
+  --box:#383838; --box2:#3f3f3f; --field:#545454; --fieldh:#656565; --input:#1d1d1d;
+  --blue:#4772b3; --blueh:#5680c2; --text:#e6e6e6; --dim:#9d9d9d; --orange:#ffa033;
+  --row1:#282828; --row2:#2c2c2c; --sel:#334d80; --act:#3d5c99;
+  --x:#ff3352; --y:#8bdc00; --z:#2890ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--gap);color:var(--text);font:12.5px/1.4 Inter,system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit}
+a{color:#7fa8ff}
+svg{display:block}
+
+/* ---------- top bar ---------- */
+.topbar{height:30px;flex:none;display:flex;align-items:center;gap:1px;background:var(--top);padding:0 6px;white-space:nowrap}
+.logo{width:20px;height:20px;margin:0 8px 0 2px;flex:none}
+.mbtn{background:none;border:0;padding:4px 8px;border-radius:4px;cursor:pointer}
+.mbtn:hover,.mbtn.open{background:#383838}
+.tabs{display:flex;gap:2px;margin-left:14px;align-self:flex-end;height:26px}
+.tab{background:none;border:0;padding:0 12px;border-radius:6px 6px 0 0;cursor:pointer;color:#c8c8c8}
+.tab:hover{background:#282828;color:#fff}
+.tab.on{background:var(--hdr);color:#fff}
+.top-right{margin-left:auto;display:flex;gap:6px;align-items:center;color:var(--dim)}
+.pill{background:#2a2a2a;border-radius:4px;padding:3px 9px;display:flex;gap:6px;align-items:center}
+.pill svg{width:13px;height:13px}
+
+/* ---------- workspaces ---------- */
+main{flex:1;min-height:0;padding:2px}
+.ws{height:100%;display:none;gap:2px}
+.ws.on{display:grid}
+#ws-layout{grid-template-columns:minmax(0,1fr) 330px;grid-template-rows:minmax(0,1fr) 118px;grid-template-areas:"vp side" "tl side"}
+.area{background:var(--area);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;min-height:0;min-width:0}
+.ahdr{height:28px;flex:none;display:flex;align-items:center;gap:3px;padding:0 6px;background:var(--hdr);white-space:nowrap;overflow:hidden}
+.ahdr .ico{width:16px;height:16px;margin:0 4px 0 2px;flex:none}
+.hbtn{background:none;border:0;padding:3px 8px;border-radius:4px;cursor:pointer;color:#ddd}
+.hbtn:hover,.hbtn.open{background:#454545}
+.dd{background:#282828;border:0;padding:3px 8px;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.dd:hover{background:#3a3a3a}
+.dd svg{width:14px;height:14px}
+.spacer{flex:1}
+.seg{display:flex;gap:1px}
+.seg button{background:var(--field);border:0;width:26px;height:22px;display:grid;place-items:center;cursor:pointer}
+.seg button:first-child{border-radius:4px 0 0 4px}
+.seg button:last-child{border-radius:0 4px 4px 0}
+.seg button:hover{background:var(--fieldh)}
+.seg button.on{background:var(--blue)}
+.seg svg{width:15px;height:15px}
+
+/* ---------- viewport ---------- */
+.vp-area{grid-area:vp}
+.vp-body{position:relative;flex:1;min-height:0;background:var(--vp)}
+.vp-body canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+.vp-text{position:absolute;left:52px;top:10px;pointer-events:none;color:#f2f2f2;text-shadow:0 1px 2px #000a;font-size:12px;line-height:1.45}
+.vp-text .s{color:#d8d8d8;margin-top:6px;font-size:11.5px}
+.vp-text .s b{font-weight:500;display:inline-block;min-width:96px;color:#bdbdbd}
+.toolbar{position:absolute;left:8px;top:10px;display:flex;flex-direction:column;gap:2px;background:#232323d9;border-radius:6px;padding:3px}
+.toolbar button{width:30px;height:30px;border:0;border-radius:4px;background:none;display:grid;place-items:center;cursor:pointer}
+.toolbar button:hover{background:#4a4a4a}
+.toolbar button.on{background:var(--blue)}
+.toolbar svg{width:18px;height:18px}
+.toolbar .tsep{height:1px;background:#3a3a3a;margin:2px 3px}
+.gizmo{position:absolute;right:6px;top:6px;width:90px;height:90px;cursor:pointer}
+.gizmo .bg{opacity:0;transition:opacity .15s}
+.gizmo:hover .bg{opacity:.12}
+.gizmo text{font:700 11px Inter,sans-serif;pointer-events:none}
+.navbtns{position:absolute;right:30px;top:102px;display:flex;flex-direction:column;gap:4px}
+.navbtns button{width:30px;height:30px;border-radius:50%;border:0;background:#2a2a2acc;display:grid;place-items:center;cursor:pointer}
+.navbtns button:hover{background:#4a4a4a}
+.navbtns svg{width:16px;height:16px}
+.vp-hint{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:#1d1d1de6;border-radius:6px;padding:6px 12px;color:#ddd;font-size:12px;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap}
+.vp-hint.on{opacity:1}
+
+/* ---------- side: outliner + properties ---------- */
+.side{grid-area:side;display:flex;flex-direction:column;gap:2px;min-height:0}
+.outliner{height:40%;min-height:170px}
+.ol-list{flex:1;overflow:auto;font-size:12.5px}
+.ol-row{display:flex;align-items:center;height:22px;padding-right:6px;cursor:pointer;gap:5px}
+.ol-row:nth-child(odd){background:var(--row1)}
+.ol-row:nth-child(even){background:var(--row2)}
+.ol-row:hover{background:#363636}
+.ol-row.sel{background:var(--sel)}
+.ol-row.act{background:var(--act)}
+.ol-row.act .nm{color:#fff}
+.ol-row.hid .nm{color:#7a7a7a}
+.ol-row svg{width:15px;height:15px;flex:none}
+.ol-row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ol-row .eye{background:none;border:0;padding:2px;border-radius:3px;cursor:pointer;opacity:.85}
+.ol-row .eye:hover{background:#ffffff1a}
+.props{flex:1}
+.props-body{flex:1;display:flex;min-height:0}
+.ptabs{width:34px;flex:none;background:#232323;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0}
+.ptabs button{width:28px;height:28px;border:0;border-radius:5px;background:none;display:grid;place-items:center;cursor:pointer}
+.ptabs button:hover{background:#3a3a3a}
+.ptabs button.on{background:var(--hdr)}
+.ptabs svg{width:17px;height:17px}
+.pcontent{flex:1;overflow:auto;padding:8px 8px 20px}
+.ptitle{display:flex;align-items:center;gap:6px;margin:0 2px 8px;color:#ccc}
+.ptitle svg{width:15px;height:15px}
+details.panel{background:var(--box);border-radius:5px;margin-bottom:5px}
+details.panel>summary{list-style:none;cursor:pointer;padding:6px 8px;font-weight:500;display:flex;align-items:center;gap:7px}
+details.panel>summary::-webkit-details-marker{display:none}
+details.panel>summary::before{content:"";width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid #bbb;transform:rotate(-90deg);transition:transform .15s}
+details.panel[open]>summary::before{transform:none}
+details.panel>.pb{padding:2px 10px 10px}
+.prow{display:grid;grid-template-columns:86px 1fr;gap:8px;align-items:start;margin:5px 0}
+.prow>label{text-align:right;color:#cfcfcf;padding-top:3px;font-size:12px}
+.vec{display:flex;flex-direction:column;gap:1px}
+.vec .nf{border-radius:0}
+.vec .nf:first-child{border-radius:4px 4px 0 0}
+.vec .nf:last-child{border-radius:0 0 4px 4px}
+.nf{position:relative;height:21px;background:var(--field);border-radius:4px;display:flex;align-items:center;cursor:ew-resize;overflow:hidden}
+.nf:hover{background:var(--fieldh)}
+.nf .fill{position:absolute;left:0;top:0;bottom:0;background:var(--blue);width:0;pointer-events:none}
+.nf .l{position:absolute;left:9px;color:#d2d2d2;pointer-events:none;z-index:1}
+.nf input{all:unset;position:relative;z-index:1;width:100%;text-align:right;padding:0 9px;pointer-events:none;font-variant-numeric:tabular-nums}
+.nf.sl input{text-align:center}
+.nf.edit{background:var(--input);cursor:text}
+.nf.edit .l,.nf.edit .fill{display:none}
+.nf.edit input{pointer-events:auto;text-align:left;user-select:text;-webkit-user-select:text}
+.txt{all:unset;box-sizing:border-box;width:100%;height:21px;background:var(--input);border-radius:4px;padding:0 8px;user-select:text;-webkit-user-select:text}
+.txt:focus{outline:1px solid var(--blue)}
+.chk{display:flex;align-items:center;gap:7px;cursor:pointer;padding-top:2px}
+.chk input{accent-color:var(--blue);margin:0}
+.colorf{all:unset;width:100%;height:21px;border-radius:4px;cursor:pointer;overflow:hidden}
+.colorf::-webkit-color-swatch-wrapper{padding:0}
+.colorf::-webkit-color-swatch{border:0;border-radius:4px}
+.colorf::-moz-color-swatch{border:0;border-radius:4px}
+.desc{color:#cfcfcf;line-height:1.55;font-size:12.5px;margin:2px 0 0}
+.desc b{color:#fff;font-weight:600}
+.kv{display:grid;grid-template-columns:1fr auto;gap:2px 10px;color:#cfcfcf}
+.kv span:nth-child(even){color:#fff;font-variant-numeric:tabular-nums}
+.muted{color:var(--dim)}
+.btn{background:var(--field);border:0;border-radius:4px;height:22px;padding:0 10px;cursor:pointer}
+.btn:hover{background:var(--fieldh)}
+.btn.blue{background:var(--blue)}
+.btn.blue:hover{background:var(--blueh)}
+
+/* ---------- timeline ---------- */
+.tl-area{grid-area:tl}
+.tl-hdr .nf{width:74px;height:20px}
+.tl-hdr .nf input{text-align:center}
+.tbtn{background:none;border:0;width:24px;height:22px;border-radius:4px;display:grid;place-items:center;cursor:pointer}
+.tbtn:hover{background:#454545}
+.tbtn.on{background:var(--blue)}
+.tbtn svg{width:13px;height:13px}
+.tl-range{display:flex;gap:1px;margin-left:8px}
+.tl-range span{background:var(--field);padding:2px 10px;font-size:12px}
+.tl-range span:first-child{border-radius:4px 0 0 4px}
+.tl-range span:last-child{border-radius:0 4px 4px 0}
+.tl-body{flex:1;position:relative;min-height:0}
+.tl-body canvas{position:absolute;inset:0;width:100%;height:100%;cursor:pointer;touch-action:none}
+
+/* ---------- status bar ---------- */
+.status{height:22px;flex:none;background:var(--top);display:flex;align-items:center;gap:16px;padding:0 10px;color:#bdbdbd;font-size:11.5px;white-space:nowrap;overflow:hidden}
+.status .h{display:flex;align-items:center;gap:5px}
+.status svg{width:12px;height:14px}
+.status .rep{color:#fff;display:flex;align-items:center;gap:6px;opacity:0;transition:opacity .3s}
+.status .rep.on{opacity:1}
+.status .rep i{width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.status .right{margin-left:auto;color:#a8a8a8}
+
+/* ---------- menus ---------- */
+.menu{position:fixed;z-index:80;background:#181818f2;border:1px solid #2e2e2e;border-radius:7px;padding:4px;min-width:210px;box-shadow:0 10px 30px #000a;backdrop-filter:blur(4px)}
+.menu .mt{padding:3px 8px 5px;color:var(--dim);font-size:11.5px;border-bottom:1px solid #2a2a2a;margin-bottom:3px}
+.mi{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:4px;cursor:pointer;white-space:nowrap}
+.mi svg{width:14px;height:14px;flex:none}
+.mi .k{margin-left:auto;padding-left:26px;color:#8a8a8a;font-size:11.5px}
+.mi:hover{background:var(--blue)}
+.mi:hover .k{color:#dce6ff}
+.msep{height:1px;background:#2c2c2c;margin:3px 2px}
+.pie{position:fixed;z-index:80;width:0;height:0}
+.pie .dot{position:absolute;left:-14px;top:-14px;width:28px;height:28px;border-radius:50%;border:2px solid #ffffff55;background:#00000044}
+.pie button{position:absolute;transform:translate(-50%,-50%);background:#181818f2;border:0;border-radius:6px;padding:6px 12px;cursor:pointer;display:flex;gap:7px;align-items:center;white-space:nowrap;box-shadow:0 6px 20px #0008}
+.pie button:hover{background:var(--blue)}
+.pie button.on{outline:1px solid var(--blue)}
+.pie svg{width:15px;height:15px}
+
+/* ---------- render window & splash ---------- */
+.modal{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;background:#0006;padding:16px}
+.modal.on{display:flex}
+.rwin{width:min(1100px,100%);height:min(720px,100%);background:var(--area);border-radius:8px;box-shadow:0 20px 60px #000c;display:flex;flex-direction:column;overflow:hidden}
+.rwin .wt{height:28px;background:var(--top);display:flex;align-items:center;justify-content:center;position:relative;color:#ccc;flex:none}
+.rwin .wt button{position:absolute;right:6px;top:4px;width:20px;height:20px;border:0;border-radius:4px;background:none;cursor:pointer;color:#bbb}
+.rwin .wt button:hover{background:#c42b1c;color:#fff}
+.rwin .rv{flex:1;min-height:0;display:grid;place-items:center;background:#232323;padding:14px;
+  background-image:linear-gradient(45deg,#262626 25%,transparent 25%,transparent 75%,#262626 75%),linear-gradient(45deg,#262626 25%,transparent 25%,transparent 75%,#262626 75%);background-size:24px 24px;background-position:0 0,12px 12px}
+.rwin canvas{max-width:100%;max-height:100%;box-shadow:0 4px 18px #0009}
+.rwin .ri{height:26px;background:var(--hdr);display:flex;align-items:center;gap:14px;padding:0 10px;color:#cfcfcf;font-size:12px;flex:none;white-space:nowrap;overflow:hidden}
+.rwin .ri .spacer{flex:1}
+.prog{width:120px;height:6px;border-radius:3px;background:#1b1b1b;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--orange)}
+.splash{width:min(620px,100%);background:#2b2b2b;border-radius:8px;overflow:hidden;box-shadow:0 20px 60px #000c}
+.splash .img{position:relative;aspect-ratio:16/8;background:#222 center/cover no-repeat}
+.splash .img::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 45%,#000b)}
+.splash .ttl{position:absolute;left:18px;bottom:14px;z-index:1}
+.splash .ttl h1{margin:0;font-size:28px;font-weight:700;letter-spacing:-.5px}
+.splash .ttl h1 span{color:var(--orange)}
+.splash .ttl p{margin:2px 0 0;color:#ddd;font-size:12px}
+.splash .ver{position:absolute;right:14px;top:12px;z-index:1;font-size:11.5px;color:#eee;background:#0007;padding:2px 8px;border-radius:4px}
+.splash .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:14px 18px 18px}
+.splash h3{margin:0 0 6px;font-size:12px;color:var(--dim);font-weight:500}
+.splash .lnk{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:4px;cursor:pointer;color:#e6e6e6;text-decoration:none}
+.splash .lnk:hover{background:var(--blue)}
+.splash .lnk svg{width:15px;height:15px}
+.splash .tip{color:#cfcfcf;padding:3px 0;display:flex;gap:8px}
+.kc{display:inline-block;min-width:20px;text-align:center;background:#454545;border-radius:4px;padding:0 6px;font-size:11.5px;color:#fff;box-shadow:inset 0 -2px 0 #0005;line-height:19px;font-weight:500}
+
+/* ---------- document workspaces ---------- */
+#ws-about,#ws-keys{grid-template-columns:1fr}
+.doc{flex:1;overflow:auto;padding:22px 18px 60px}
+.doc-in{max-width:980px;margin:0 auto}
+.hero{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;align-items:center;margin-bottom:16px}
+.hero h1{font-size:34px;line-height:1.1;margin:0 0 10px;letter-spacing:-.6px}
+.hero h1 span{color:var(--orange)}
+.hero p{color:#cfcfcf;font-size:14px;line-height:1.6;margin:0 0 12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--box);border-radius:12px;padding:3px 10px;font-size:12px;color:#ddd}
+.hero-img{border-radius:8px;overflow:hidden;aspect-ratio:16/10;background:#222 center/cover;box-shadow:0 8px 30px #0007;position:relative}
+.hero-img span{position:absolute;left:8px;bottom:8px;background:#000a;font-size:11px;padding:2px 7px;border-radius:4px;color:#ddd}
+.doc details.panel>summary{font-size:13.5px;padding:9px 12px}
+.doc details.panel>.pb{padding:4px 14px 16px}
+.nodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px 22px;padding:6px 6px 4px}
+.node{position:relative;background:#303030;border-radius:7px;box-shadow:0 3px 12px #0006;border:1px solid #232323}
+.node h4{margin:0;padding:5px 10px;background:var(--c);border-radius:6px 6px 0 0;font-size:12.5px;font-weight:600;color:#fff;text-shadow:0 1px 1px #0006}
+.node p{margin:0;padding:8px 12px 10px;color:#cfcfcf;font-size:12.5px;line-height:1.5}
+.node .so{position:absolute;right:-6px;top:38px;width:11px;height:11px;border-radius:50%;background:var(--s);border:1.5px solid #151515}
+.node .si{position:absolute;left:-6px;top:38px;width:11px;height:11px;border-radius:50%;background:var(--s2,#a1a1a1);border:1.5px solid #151515}
+.dope{display:grid;grid-template-columns:62px 1fr;font-size:13px}
+.dope>div{padding:8px 10px;border-bottom:1px solid #2f2f2f}
+.dope .yr{color:var(--orange);font-weight:600;font-variant-numeric:tabular-nums;display:flex;gap:8px;align-items:flex-start}
+.dope .yr::before{content:"";width:8px;height:8px;margin-top:5px;background:#ddd;transform:rotate(45deg);flex:none}
+.dope .tx{color:#d6d6d6;line-height:1.55}
+.dope .tx b{color:#fff}
+.films{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.film{border-radius:6px;overflow:hidden;background:#303030}
+.film .pic{aspect-ratio:16/9;background:var(--g);display:flex;align-items:flex-end;padding:6px 8px;font-size:11px;color:#fffd;font-weight:600}
+.film .fn{padding:6px 9px 8px}
+.film .fn b{display:block;font-size:13px}
+.film .fn span{color:var(--dim);font-size:11.5px}
+.steps{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.step{background:#303030;border-radius:6px;padding:10px 12px;line-height:1.5;color:#d0d0d0}
+.step b{color:#fff;display:block;margin-bottom:3px}
+.k-search{display:flex;gap:8px;align-items:center;margin:0 0 12px}
+.k-search .txt{max-width:340px;height:26px}
+table.keys{width:100%;border-collapse:collapse;font-size:13px}
+table.keys td{padding:6px 8px;border-bottom:1px solid #303030;vertical-align:middle}
+table.keys tr:hover td{background:#333}
+table.keys td:first-child{width:170px;white-space:nowrap}
+table.keys td:last-child{width:120px;text-align:right}
+.ok{font-size:11px;background:#2f4a2a;color:#a9e08f;border-radius:10px;padding:1px 8px;white-space:nowrap}
+.foot{color:var(--dim);text-align:center;margin-top:24px;font-size:12px}
+
+/* ---------- mobile ---------- */
+@media (max-width:860px){
+  body{overflow:auto;height:auto;min-height:100%}
+  main{flex:none}
+  .ws.on{height:auto}
+  #ws-layout{grid-template-columns:1fr;grid-template-rows:62vh 118px auto;grid-template-areas:"vp" "tl" "side"}
+  .outliner{height:auto;min-height:0}
+  .ol-list{max-height:230px}
+  .props-body{min-height:420px}
+  .topbar{overflow-x:auto}
+  .top-right{display:none}
+  .hero{grid-template-columns:1fr}
+  .status .right,.status .hide-m{display:none}
+  .vp-text .s{display:none}
+  .navbtns{display:none}
+  .doc{padding:16px 12px 40px}
+  .splash .cols{grid-template-columns:1fr}
+  #ws-about .area,#ws-keys .area{min-height:calc(100vh - 60px)}
+}
+</style>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+
+<header class="topbar">
+  <svg class="logo" viewBox="0 0 24 24"><path d="M12 2.5l8.5 4.8v9.4L12 21.5l-8.5-4.8V7.3z" fill="#ffa033"/><path d="M12 2.5l8.5 4.8L12 12 3.5 7.3z" fill="#ffc77a"/><path d="M12 12v9.5l8.5-4.8V7.3z" fill="#d97a12"/></svg>
+  <button class="mbtn" data-top="file">Файл</button>
+  <button class="mbtn" data-top="edit">Правка</button>
+  <button class="mbtn" data-top="render">Рендер</button>
+  <button class="mbtn" data-top="window">Окно</button>
+  <button class="mbtn" data-top="help">Справка</button>
+  <nav class="tabs">
+    <button class="tab on" data-ws="layout">Layout</button>
+    <button class="tab" data-ws="about">О Blender</button>
+    <button class="tab" data-ws="keys">Горячие клавиши</button>
+  </nav>
+  <div class="top-right">
+    <div class="pill"><svg viewBox="0 0 16 16"><path d="M3 12l5-9 5 9z" fill="none" stroke="#bbb" stroke-width="1.4"/></svg>Scene</div>
+    <div class="pill"><svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="9" rx="1.5" fill="none" stroke="#bbb" stroke-width="1.4"/><path d="M2.5 6.5h11" stroke="#bbb" stroke-width="1.4"/></svg>ViewLayer</div>
+  </div>
+</header>
+
+<main>
+  <!-- ============ LAYOUT ============ -->
+  <section class="ws on" id="ws-layout">
+    <div class="area vp-area">
+      <div class="ahdr">
+        <svg class="ico" viewBox="0 0 16 16"><path d="M8 1.8l5.6 3.1v6.2L8 14.2 2.4 11.1V4.9z" fill="none" stroke="#ccc" stroke-width="1.3"/><path d="M8 8l5.6-3.1M8 8v6.2M8 8L2.4 4.9" stroke="#ccc" stroke-width="1.3"/></svg>
+        <button class="dd" id="modeBtn"><svg viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" rx="1.5" fill="#ffa033"/></svg><span>Объектный режим</span> ▾</button>
+        <button class="hbtn" data-vmenu="view">Вид</button>
+        <button class="hbtn" data-vmenu="select">Выделение</button>
+        <button class="hbtn" data-vmenu="add">Добавить</button>
+        <button class="hbtn" data-vmenu="object">Объект</button>
+        <div class="spacer"></div>
+        <div class="seg" id="shadeSeg">
+          <button data-shade="wire" title="Каркас (Z)"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#ddd" stroke-width="1.2"/><ellipse cx="8" cy="8" rx="2.6" ry="6" fill="none" stroke="#ddd" stroke-width="1"/><path d="M2 8h12" stroke="#ddd"/></svg></button>
+          <button data-shade="solid" class="on" title="Сплошной"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="#d9d9d9"/><circle cx="6" cy="6" r="2.2" fill="#fff"/></svg></button>
+          <button data-shade="material" title="Предпросмотр материалов"><svg viewBox="0 0 16 16"><defs><radialGradient id="gm" cx=".35" cy=".35"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#e88a5a"/><stop offset="1" stop-color="#8a3b1a"/></radialGradient></defs><circle cx="8" cy="8" r="6" fill="url(#gm)"/></svg></button>
+          <button data-shade="rendered" title="Рендер"><svg viewBox="0 0 16 16"><defs><radialGradient id="gr" cx=".35" cy=".3"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#bbb"/><stop offset="1" stop-color="#222"/></radialGradient></defs><circle cx="8" cy="8" r="6" fill="url(#gr)"/></svg></button>
+        </div>
+      </div>
+      <div class="vp-body" id="vp">
+        <div class="vp-text" id="vpText"></div>
+        <div class="toolbar" id="toolbar">
+          <button data-tool="select" class="on" title="Выделение (Esc)"><svg viewBox="0 0 20 20"><rect x="2.5" y="2.5" width="12" height="12" rx="1" fill="none" stroke="#ddd" stroke-dasharray="2 2"/><path d="M9 8l8 3.3-3.4 1.2 2.6 3.4-1.5 1.1-2.6-3.4L10 16z" fill="#fff"/></svg></button>
+          <div class="tsep"></div>
+          <button data-tool="translate" title="Перемещение (G)"><svg viewBox="0 0 20 20"><path d="M10 2l2.6 3h-1.8v4.2H15V7.4l3 2.6-3 2.6v-1.8h-4.2V15h1.8L10 18l-2.6-3h1.8v-4.2H5v1.8L2 10l3-2.6v1.8h4.2V5H7.4z" fill="#ddd"/></svg></button>
+          <button data-tool="rotate" title="Вращение (R)"><svg viewBox="0 0 20 20"><path d="M15.5 10a5.5 5.5 0 1 1-2-4.25" fill="none" stroke="#ddd" stroke-width="1.8"/><path d="M11.5 3.2l4.2 1.4-1.7 4z" fill="#ddd"/></svg></button>
+          <button data-tool="scale" title="Масштаб (S)"><svg viewBox="0 0 20 20"><rect x="2.5" y="8.5" width="9" height="9" fill="none" stroke="#ddd" stroke-width="1.5"/><path d="M9 11l7-7M11.5 3.5H16.5V8.5" fill="none" stroke="#ddd" stroke-width="1.6"/></svg></button>
+        </div>
+        <svg class="gizmo" id="gizmo" viewBox="0 0 90 90"><circle class="bg" cx="45" cy="45" r="44" fill="#fff"/><g id="gzAxes"></g></svg>
+        <div class="navbtns">
+          <button id="navCam" title="Вид из камеры (Numpad 0)"><svg viewBox="0 0 16 16"><path d="M2 5.5h8v6H2zM10 7.5l4-2v6l-4-2" fill="none" stroke="#ddd" stroke-width="1.3"/></svg></button>
+          <button id="navHome" title="Показать всё (Home)"><svg viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="#ddd" stroke-width="1.4"/></svg></button>
+        </div>
+        <div class="vp-hint" id="vpHint"></div>
+      </div>
+    </div>
+
+    <div class="area tl-area">
+      <div class="ahdr tl-hdr">
+        <svg class="ico" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#ccc" stroke-width="1.3"/><path d="M8 4.5V8l2.5 1.6" stroke="#ccc" stroke-width="1.3" fill="none"/></svg>
+        <span style="margin-right:8px;color:#ccc">Временная шкала</span>
+        <button class="tbtn" id="tlStart" title="В начало"><svg viewBox="0 0 12 12"><path d="M2 1.5v9M10.5 1.5 4 6l6.5 4.5z" fill="#ddd" stroke="#ddd"/></svg></button>
+        <button class="tbtn" id="tlPlay" title="Воспроизвести (Пробел)"><svg viewBox="0 0 12 12"><path d="M3 1.5 10.5 6 3 10.5z" fill="#ddd"/></svg></button>
+        <button class="tbtn" id="tlEnd" title="В конец"><svg viewBox="0 0 12 12"><path d="M10 1.5v9M1.5 1.5 8 6l-6.5 4.5z" fill="#ddd" stroke="#ddd"/></svg></button>
+        <div class="spacer"></div>
+        <span id="frameFieldSlot"></span>
+        <div class="tl-range"><span>Начало 1</span><span>Конец 250</span></div>
+      </div>
+      <div class="tl-body"><canvas id="tlCanvas"></canvas></div>
+    </div>
+
+    <div class="side">
+      <div class="area outliner">
+        <div class="ahdr">
+          <svg class="ico" viewBox="0 0 16 16"><path d="M2.5 3.5h11M5 7h8.5M5 10.5h8.5M2.5 3.5v7h2" fill="none" stroke="#ccc" stroke-width="1.3"/></svg>
+          <span style="color:#ccc">Структура проекта</span>
+        </div>
+        <div class="ol-list" id="outliner"></div>
+      </div>
+      <div class="area props">
+        <div class="ahdr">
+          <svg class="ico" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="2" fill="none" stroke="#ccc" stroke-width="1.3"/><path d="M5 6h6M5 8.5h6M5 11h4" stroke="#ccc" stroke-width="1.2"/></svg>
+          <span style="color:#ccc">Свойства</span>
+        </div>
+        <div class="props-body">
+          <div class="ptabs" id="ptabs">
+            <button data-ptab="object" class="on" title="Объект"><svg viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" rx="1.5" fill="#ffa033"/></svg></button>
+            <button data-ptab="material" title="Материал"><svg viewBox="0 0 16 16"><defs><radialGradient id="pm" cx=".35" cy=".35"><stop offset="0" stop-color="#ffb3a3"/><stop offset="1" stop-color="#c0392b"/></radialGradient></defs><circle cx="8" cy="8" r="5.5" fill="url(#pm)"/></svg></button>
+            <button data-ptab="world" title="Мир"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="#e05555" stroke-width="1.4"/><ellipse cx="8" cy="8" rx="2.3" ry="5.5" fill="none" stroke="#e05555" stroke-width="1.1"/><path d="M2.5 8h11" stroke="#e05555" stroke-width="1.1"/></svg></button>
+          </div>
+          <div class="pcontent" id="pcontent"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="ws" id="ws-about">
+    <div class="area">
+      <div class="ahdr">
+        <svg class="ico" viewBox="0 0 16 16"><path d="M3.5 2.5h6l3 3v8h-9z" fill="none" stroke="#ccc" stroke-width="1.3"/><path d="M5.5 7.5h5M5.5 10h5" stroke="#ccc" stroke-width="1.2"/></svg>
+        <span style="color:#ccc">О Blender</span>
+      </div>
+      <div class="doc"><div class="doc-in">
+        <div class="hero">
+          <div>
+            <h1>Blender — <span>бесплатный</span> 3D-пакет, на котором делают всё</h1>
+            <p>Моделирование, скульптинг, анимация, симуляции, рендер, композитинг и даже монтаж видео — в одной программе с открытым исходным кодом. Её развивает некоммерческий Blender Foundation и тысячи людей по всему миру.</p>
+            <div class="chips"><span class="chip">Бесплатно навсегда · GPL</span><span class="chip">Windows · macOS · Linux</span><span class="chip">С 1994 года</span><span class="chip">Python API</span></div>
+          </div>
+          <div class="hero-img" id="heroImg"><span>Кадр отрендерен прямо в вашем браузере</span></div>
+        </div>
+
+        <details class="panel" open><summary>Что умеет Blender</summary><div class="pb"><div class="nodes">
+          <div class="node" style="--c:#2e6a3e;--s:#00d6a3"><i class="si"></i><h4>Моделирование</h4><p>Полигоны, кривые, модификаторы (Subdivision, Bevel, Mirror, Array) и недеструктивная работа.</p><i class="so"></i></div>
+          <div class="node" style="--c:#7a3f8a;--s:#c7c729"><i class="si"></i><h4>Скульптинг</h4><p>Лепка как из глины: миллионы полигонов, Dyntopo, Multires, кисти и маски.</p><i class="so"></i></div>
+          <div class="node" style="--c:#8a3a3a;--s:#c7c729"><i class="si"></i><h4>Рендер: Cycles и EEVEE</h4><p>Cycles — физически точный трассировщик путей. EEVEE — быстрый движок реального времени.</p><i class="so"></i></div>
+          <div class="node" style="--c:#2f5a8a;--s:#6363c7"><i class="si"></i><h4>Анимация и риггинг</h4><p>Ключевые кадры, кости, ограничения, Shape Keys, Dope Sheet и редактор графиков.</p><i class="so"></i></div>
+          <div class="node" style="--c:#1f7a6a;--s:#00d6a3"><i class="si"></i><h4>Geometry Nodes</h4><p>Процедурная геометрия на нодах: рассыпать камни, вырастить лес, построить город.</p><i class="so"></i></div>
+          <div class="node" style="--c:#8a6a1f;--s:#c7c729"><i class="si"></i><h4>Grease Pencil</h4><p>Рисованная 2D-анимация прямо в 3D-пространстве: штрихи, слои, заливка.</p><i class="so"></i></div>
+          <div class="node" style="--c:#5a5a5a;--s:#a1a1a1"><i class="si"></i><h4>Симуляции</h4><p>Ткань, жидкость, дым и огонь, твёрдые тела, частицы и волосы.</p><i class="so"></i></div>
+          <div class="node" style="--c:#3f4f8a;--s:#6363c7"><i class="si"></i><h4>Композитинг и монтаж</h4><p>Пост-обработка на нодах и встроенный видеоредактор (VSE).</p><i class="so"></i></div>
+        </div></div></details>
+
+        <details class="panel" open><summary>История (как Dope Sheet)</summary><div class="pb"><div class="dope">
+          <div class="yr">1994</div><div class="tx"><b>Тон Розендал</b> начинает писать Blender как внутренний инструмент нидерландской студии NeoGeo.</div>
+          <div class="yr">1998</div><div class="tx">Создана компания <b>Not a Number (NaN)</b>, чтобы развивать и продавать Blender.</div>
+          <div class="yr">2002</div><div class="tx">NaN закрывается. Кампания <b>«Free Blender»</b> собирает €100 000 за несколько недель — код открывают под GPL, появляется <b>Blender Foundation</b>.</div>
+          <div class="yr">2011</div><div class="tx">Серия <b>2.5x–2.6x</b>: переписанный интерфейс, а в 2.61 появляется рендер-движок <b>Cycles</b>.</div>
+          <div class="yr">2019</div><div class="tx"><b>Blender 2.80</b> — революция: новый интерфейс, EEVEE, Grease Pencil 2.0, выделение левой кнопкой мыши.</div>
+          <div class="yr">2021</div><div class="tx"><b>Blender 3.0</b> и <b>Cycles X</b> — рендер стал в разы быстрее.</div>
+          <div class="yr">2023</div><div class="tx"><b>Blender 4.0</b>: новый Principled BSDF, AgX, улучшенный риггинг.</div>
+          <div class="yr">2025</div><div class="tx">Мультфильм <b>«Flow» (Латвия)</b>, сделанный в Blender, получает «Оскар» как лучший анимационный фильм. Выходит <b>Blender 5.0</b>.</div>
+        </div></div></details>
+
+        <details class="panel" open><summary>Открытые фильмы Blender Studio</summary><div class="pb"><div class="films">
+          <div class="film"><div class="pic" style="--g:linear-gradient(135deg,#3b2d4f,#a05a3c)">2006</div><div class="fn"><b>Elephants Dream</b><span>первый открытый фильм</span></div></div>
+          <div class="film"><div class="pic" style="--g:linear-gradient(135deg,#7fbf4d,#e8d35a)">2008</div><div class="fn"><b>Big Buck Bunny</b><span>добрый толстый кролик</span></div></div>
+          <div class="film"><div class="pic" style="--g:linear-gradient(135deg,#1e3c5a,#c9a46b)">2010</div><div class="fn"><b>Sintel</b><span>девушка и дракончик</span></div></div>
+          <div class="film"><div class="pic" style="--g:linear-gradient(135deg,#2a2f38,#5f87a8)">2012</div><div class="fn"><b>Tears of Steel</b><span>живые актёры + VFX</span></div></div>
+          <div class="film"><div class="pic" style="--g:linear-gradient(135deg,#3d6b4f,#d6c6a1)">2019</div><div class="fn"><b>Spring</b><span>пастушка и духи гор</span></div></div>
+          <div class="film"><div class="pic" style="--g:linear-gradient(135deg,#4a3b22,#8fbf5a)">2021</div><div class="fn"><b>Sprite Fright</b><span>комедийный хоррор</span></div></div>
+          <div class="film"><div class="pic" style="--g:linear-gradient(135deg,#2b2b2b,#d65a2a)">2022</div><div class="fn"><b>Charge</b><span>экшен-короткометражка</span></div></div>
+          <div class="film"><div class="pic" style="--g:linear-gradient(135deg,#5a7fd6,#f2c14e)">2023</div><div class="fn"><b>Wing It!</b><span>кот, пёс и ракета</span></div></div>
+        </div></div></details>
+
+        <details class="panel" open><summary>С чего начать</summary><div class="pb"><div class="steps">
+          <div class="step"><b>1. Скачать</b>Только с официального сайта <a href="https://www.blender.org/download/" target="_blank" rel="noopener">blender.org</a> — бесплатно, без регистрации.</div>
+          <div class="step"><b>2. Урок «Пончик»</b>Классика от Blender Guru: за серию видео делаешь пончик — и понимаешь весь Blender.</div>
+          <div class="step"><b>3. Выучить 10 клавиш</b>G, R, S, Tab, E, Ctrl+R, Shift+A, X, Numpad 0, F12 — открой вкладку «Горячие клавиши».</div>
+          <div class="step"><b>4. Руководство</b>Официальный <a href="https://docs.blender.org/manual/ru/latest/" target="_blank" rel="noopener">мануал</a> есть и на русском языке.</div>
+        </div></div></details>
+        <p class="foot">Неофициальный фан-сайт. Blender® — товарный знак Blender Foundation.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- ============ KEYS ============ -->
+  <section class="ws" id="ws-keys">
+    <div class="area">
+      <div class="ahdr">
+        <svg class="ico" viewBox="0 0 16 16"><rect x="1.5" y="4" width="13" height="8.5" rx="1.5" fill="none" stroke="#ccc" stroke-width="1.3"/><path d="M4 7h1M7 7h1M10 7h2M4 9.8h8" stroke="#ccc" stroke-width="1.3"/></svg>
+        <span style="color:#ccc">Настройки › Раскладка клавиш</span>
+      </div>
+      <div class="doc"><div class="doc-in">
+        <div class="k-search"><input class="txt" id="keySearch" placeholder="Поиск: «удалить», «Tab», «вид»…"><span class="muted" id="keyCount"></span></div>
+        <div id="keyTables"></div>
+      </div></div>
+    </div>
+  </section>
+</main>
+
+<footer class="status">
+  <span class="h"><svg viewBox="0 0 12 16"><rect x=".7" y=".7" width="10.6" height="14.6" rx="5.3" fill="none" stroke="#bbb"/><path d="M6 .7v6H.7A5.3 5.3 0 0 1 6 .7z" fill="#ddd"/></svg>Выделить</span>
+  <span class="h"><svg viewBox="0 0 12 16"><rect x=".7" y=".7" width="10.6" height="14.6" rx="5.3" fill="none" stroke="#bbb"/><path d="M6 .7v6H.7A5.3 5.3 0 0 1 6 .7z" fill="#ddd"/></svg>+ тянуть — вращать вид</span>
+  <span class="h hide-m"><svg viewBox="0 0 12 16"><rect x=".7" y=".7" width="10.6" height="14.6" rx="5.3" fill="none" stroke="#bbb"/><path d="M6 .7v6h5.3A5.3 5.3 0 0 0 6 .7z" fill="#ddd"/></svg>Сдвиг вида</span>
+  <span class="h hide-m"><span class="kc">X</span> Удалить <span class="kc">Shift A</span> Добавить <span class="kc">Z</span> Затенение</span>
+  <span class="rep" id="report"><i></i><span></span></span>
+  <span class="right" id="statusRight"></span>
+</footer>
+
+<div class="modal" id="renderModal">
+  <div class="rwin">
+    <div class="wt">Blender Render<button id="rClose" title="Закрыть (Esc)">✕</button></div>
+    <div class="ahdr"><span class="dd">Изображение ▾</span><span class="dd">Вид ▾</span><div class="spacer"></div><button class="btn blue" id="rSave">Сохранить PNG</button></div>
+    <div class="rv"><canvas id="rCanvas"></canvas></div>
+    <div class="ri"><span id="rInfo">Кадр: 1</span><div class="spacer"></div><span id="rSamples"></span><div class="prog"><i id="rProg"></i></div></div>
+  </div>
+</div>
+
+<div class="modal" id="splash">
+  <div class="splash">
+    <div class="img" id="splashImg">
+      <div class="ver">фан-сайт · v1.0</div>
+      <div class="ttl"><h1>Blender <span>фан-сайт</span></h1><p>Интерфейс как в Blender — прямо в браузере</p></div>
+    </div>
+    <div class="cols">
+      <div>
+        <h3>Новый файл</h3>
+        <a class="lnk" data-go="layout"><svg viewBox="0 0 16 16"><path d="M8 1.8l5.6 3.1v6.2L8 14.2 2.4 11.1V4.9z" fill="none" stroke="#ddd" stroke-width="1.3"/></svg>Общее — открыть сцену</a>
+        <a class="lnk" data-go="about"><svg viewBox="0 0 16 16"><path d="M3.5 2.5h6l3 3v8h-9z" fill="none" stroke="#ddd" stroke-width="1.3"/></svg>О Blender</a>
+        <a class="lnk" data-go="keys"><svg viewBox="0 0 16 16"><rect x="1.5" y="4" width="13" height="8.5" rx="1.5" fill="none" stroke="#ddd" stroke-width="1.3"/></svg>Горячие клавиши</a>
+        <a class="lnk" data-go="render"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="#ddd" stroke-width="1.3"/><circle cx="8" cy="8" r="2" fill="#ddd"/></svg>Рендер (F12)</a>
+      </div>
+      <div>
+        <h3>Попробуй</h3>
+        <div class="tip"><span class="kc">ЛКМ</span>клик — выделить, тянуть — вращать</div>
+        <div class="tip"><span class="kc">X</span>удалить куб (это традиция)</div>
+        <div class="tip"><span class="kc">Tab</span>режим правки — видны вершины</div>
+        <div class="tip"><span class="kc">Z</span>каркас / материал / рендер</div>
+        <div class="tip"><span class="kc">Пробел</span>запустить анимацию</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const V3 = THREE.Vector3;
+const DEG = Math.PI / 180;
+const TEST = new URLSearchParams(location.search).has('test');
+
+/* ================= ICONS ================= */
+const IC = {
+  mesh:  '<svg viewBox="0 0 16 16"><path d="M2.6 12.8 8 3.2l5.4 9.6z" fill="none" stroke="#ef9f55" stroke-width="1.4"/><circle cx="8" cy="3.2" r="1.5" fill="#ef9f55"/><circle cx="2.6" cy="12.8" r="1.5" fill="#ef9f55"/><circle cx="13.4" cy="12.8" r="1.5" fill="#ef9f55"/></svg>',
+  camera:'<svg viewBox="0 0 16 16"><path d="M2 5h7.5v6.5H2zM9.5 7.3l4.5-2.3v6.5l-4.5-2.3" fill="none" stroke="#ef9f55" stroke-width="1.4"/></svg>',
+  light: '<svg viewBox="0 0 16 16"><circle cx="8" cy="7" r="3.6" fill="none" stroke="#ef9f55" stroke-width="1.4"/><path d="M6.2 12.5h3.6M6.8 14.5h2.4" stroke="#ef9f55" stroke-width="1.3"/></svg>',
+  coll:  '<svg viewBox="0 0 16 16"><path d="M2.5 5 8 2.5 13.5 5v6L8 13.5 2.5 11z" fill="none" stroke="#e8e8e8" stroke-width="1.3"/><path d="M2.5 5 8 7.5 13.5 5M8 7.5v6" stroke="#e8e8e8" stroke-width="1.3" fill="none"/></svg>',
+  scene: '<svg viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="2" fill="none" stroke="#e8e8e8" stroke-width="1.3"/></svg>',
+  eye:   '<svg viewBox="0 0 16 16"><path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z" fill="none" stroke="#ddd" stroke-width="1.3"/><circle cx="8" cy="8" r="2" fill="#ddd"/></svg>',
+  eyeOff:'<svg viewBox="0 0 16 16"><path d="M1.8 7.5s2.6 3.5 6.2 3.5 6.2-3.5 6.2-3.5" fill="none" stroke="#888" stroke-width="1.3"/><path d="M4 10.2 3 12M8 11v2M12 10.2l1 1.8" stroke="#888" stroke-width="1.3"/></svg>',
+  caret: '<svg viewBox="0 0 16 16" style="width:10px"><path d="M4 6l4 4 4-4" fill="none" stroke="#bbb" stroke-width="1.5"/></svg>',
+  cube:  '<svg viewBox="0 0 16 16"><path d="M8 1.8l5.6 3.1v6.2L8 14.2 2.4 11.1V4.9z" fill="none" stroke="#ddd" stroke-width="1.2"/><path d="M8 8l5.6-3.1M8 8v6.2M8 8L2.4 4.9" stroke="#ddd" stroke-width="1.2"/></svg>',
+  sphere:'<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#ddd" stroke-width="1.2"/><ellipse cx="8" cy="8" rx="6" ry="2.4" fill="none" stroke="#ddd"/></svg>',
+  ico:   '<svg viewBox="0 0 16 16"><path d="M8 1.8 13.6 5v6L8 14.2 2.4 11V5z M2.4 5 8 8l5.6-3M8 8v6.2" fill="none" stroke="#ddd" stroke-width="1.2"/></svg>',
+  cyl:   '<svg viewBox="0 0 16 16"><ellipse cx="8" cy="4" rx="5" ry="2" fill="none" stroke="#ddd" stroke-width="1.2"/><path d="M3 4v8a5 2 0 0 0 10 0V4" fill="none" stroke="#ddd" stroke-width="1.2"/></svg>',
+  cone:  '<svg viewBox="0 0 16 16"><path d="M8 1.8 13 12a5 2 0 0 1-10 0z" fill="none" stroke="#ddd" stroke-width="1.2"/></svg>',
+  torus: '<svg viewBox="0 0 16 16"><ellipse cx="8" cy="8" rx="6" ry="3.6" fill="none" stroke="#ddd" stroke-width="1.3"/><ellipse cx="8" cy="7.6" rx="2.4" ry="1.1" fill="none" stroke="#ddd" stroke-width="1.2"/></svg>',
+  monkey:'<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="4.6" fill="none" stroke="#ddd" stroke-width="1.2"/><circle cx="2.6" cy="7" r="1.7" fill="none" stroke="#ddd"/><circle cx="13.4" cy="7" r="1.7" fill="none" stroke="#ddd"/><circle cx="6.3" cy="7.3" r=".9" fill="#ddd"/><circle cx="9.7" cy="7.3" r=".9" fill="#ddd"/></svg>',
+};
+
+/* ================= RENDERER / SCENE ================= */
+const vp = $('#vp');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.domElement.tabIndex = 0;
+vp.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+const worldColor = new THREE.Color('#393939');
+scene.background = worldColor;
+
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 500);
+camera.position.set(-4, 10.5, 17.5);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1, -1.5);
+controls.enableDamping = true;
+controls.dampingFactor = 0.14;
+controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.ROTATE, RIGHT: THREE.MOUSE.PAN };
+controls.minDistance = 2; controls.maxDistance = 80;
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const hemi = new THREE.HemisphereLight(0xffffff, 0x505050, 1.6);
+const keyL = new THREE.DirectionalLight(0xffffff, 1.7); keyL.position.set(6, 10, 8);
+const sun = new THREE.DirectionalLight(0xfff0dc, 2.6);
+sun.position.set(7, 13, 5);
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -11, right: 11, top: 11, bottom: -11, near: 1, far: 40 });
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
+scene.add(hemi, keyL, sun, sun.target);
+
+// floor grid like Blender
+const grid = new THREE.GridHelper(60, 60, 0x4a4a4a, 0x4a4a4a);
+grid.material.transparent = true; grid.material.opacity = 0.75; grid.material.depthWrite = false;
+scene.add(grid);
+const axes = new THREE.Group();
+function axisLine(a, b, c) {
+  const g = new THREE.BufferGeometry().setFromPoints([a, b]);
+  axes.add(new THREE.Line(g, new THREE.LineBasicMaterial({ color: c })));
+}
+axisLine(new V3(-30, .003, 0), new V3(30, .003, 0), 0xb5404e);
+axisLine(new V3(0, .003, -30), new V3(0, .003, 30), 0x7ca23a);
+scene.add(axes);
+
+const shadowFloor = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.ShadowMaterial({ opacity: 0.38 }));
+shadowFloor.rotation.x = -Math.PI / 2; shadowFloor.receiveShadow = true; shadowFloor.visible = false;
+scene.add(shadowFloor);
+
+// 3D cursor (red/white ring)
+const cursorTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const x = c.getContext('2d'); x.lineWidth = 4;
+  for (let i = 0; i < 8; i++) {
+    x.strokeStyle = i % 2 ? '#ffffff' : '#ff2a2a';
+    x.beginPath(); x.arc(32, 32, 20, i * Math.PI / 4, (i + 1) * Math.PI / 4); x.stroke();
+  }
+  x.strokeStyle = '#000'; x.lineWidth = 2;
+  [[32, 2, 32, 14], [32, 50, 32, 62], [2, 32, 14, 32], [50, 32, 62, 32]].forEach(([a, b, c2, d]) => { x.beginPath(); x.moveTo(a, b); x.lineTo(c2, d); x.stroke(); });
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const cursor3d = new THREE.Sprite(new THREE.SpriteMaterial({ map: cursorTex, depthTest: false, sizeAttenuation: false }));
+cursor3d.scale.set(0.05, 0.05, 1); cursor3d.position.set(0, 0, 4.5); cursor3d.renderOrder = 10;
+scene.add(cursor3d);
+
+// post-processing: Blender-like orange selection outline
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const outline = new OutlinePass(new THREE.Vector2(256, 256), scene, camera);
+Object.assign(outline, { edgeStrength: 6, edgeGlow: 0, edgeThickness: 1, pulsePeriod: 0 });
+outline.visibleEdgeColor.set('#ffa033'); outline.hiddenEdgeColor.set('#6b4410');
+composer.addPass(outline);
+composer.addPass(new OutputPass());
+
+const tc = new TransformControls(camera, renderer.domElement);
+const tcHelper = tc.getHelper ? tc.getHelper() : tc;
+tc.setSize(0.9);
+scene.add(tcHelper);
+tc.addEventListener('dragging-changed', e => { controls.enabled = !e.value; });
+tc.addEventListener('objectChange', () => { liveSyncs.forEach(f => f()); });
+
+/* ================= MATERIALS / MODELS ================= */
+const std = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.5, ...o });
+const solidMat = new THREE.MeshStandardMaterial({ color: 0xc4c4c4, roughness: 0.62 });
+const wireMat = new THREE.MeshBasicMaterial({ color: 0x141414, wireframe: true });
+
+function makeCube() {
+  const m = std(0xcccccc, { roughness: 0.45 });
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), m);
+  return { obj: mesh, mainMat: m };
+}
+
+function makeDonut() {
+  const g = new THREE.Group();
+  const R = 1, r = 0.45;
+  const doughMat = std(0xd39a5b, { roughness: 0.62 });
+  const dough = new THREE.Mesh(new THREE.TorusGeometry(R, r, 36, 80), doughMat);
+  dough.rotation.x = -Math.PI / 2;
+  g.add(dough);
+  // icing: top half of the tube with wavy drips
+  const U = 180, V = 36, pos = [], idx = [];
+  for (let i = 0; i <= U; i++) {
+    const u = i / U * Math.PI * 2;
+    const n = Math.sin(u * 5) + Math.sin(u * 11 + 1.3) * 0.6 + Math.sin(u * 3 + 0.5) * 0.4;
+    const dOut = 0.22 + Math.max(0, n) * 0.32;
+    const dIn = 0.18 + Math.max(0, Math.sin(u * 7 + 2)) * 0.22;
+    for (let j = 0; j <= V; j++) {
+      const v = -dOut + j / V * (Math.PI + dOut + dIn);
+      const rr = r * 1.075 + Math.sin(v) * 0.012;
+      const rad = R + rr * Math.cos(v);
+      pos.push(Math.cos(u) * rad, rr * Math.sin(v), Math.sin(u) * rad);
+    }
+  }
+  for (let i = 0; i < U; i++) for (let j = 0; j < V; j++) {
+    const a = i * (V + 1) + j, b = a + V + 1;
+    idx.push(a, a + 1, b, b, a + 1, b + 1);
+  }
+  const ig = new THREE.BufferGeometry();
+  ig.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  ig.setIndex(idx); ig.computeVertexNormals();
+  const icingMat = std(0xff7fb2, { roughness: 0.28, side: THREE.DoubleSide });
+  g.add(new THREE.Mesh(ig, icingMat));
+  // sprinkles
+  const N = 150, cols = [0xffffff, 0x5ac8fa, 0xffd60a, 0x34c759, 0xff375f, 0xaf52de].map(c => new THREE.Color(c));
+  const sp = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.02, 0.09, 3, 6), std(0xffffff, { roughness: 0.4 }), N);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
+  let s = 7;
+  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let k = 0; k < N; k++) {
+    const u = rnd() * Math.PI * 2, v = 0.35 + rnd() * 2.45;
+    const rr = r * 1.075 + 0.02, rad = R + rr * Math.cos(v);
+    const p = new V3(Math.cos(u) * rad, rr * Math.sin(v), Math.sin(u) * rad);
+    const nrm = new V3(Math.cos(u) * Math.cos(v), Math.sin(v), Math.sin(u) * Math.cos(v));
+    const t = new V3(rnd() - .5, rnd() - .5, rnd() - .5).cross(nrm).normalize();
+    q.setFromUnitVectors(new V3(0, 1, 0), t);
+    m4.compose(p, q, new V3(1, 1, 1));
+    sp.setMatrixAt(k, m4); sp.setColorAt(k, cols[k % cols.length]);
+  }
+  g.add(sp);
+  return { obj: g, mainMat: icingMat };
+}
+
+function makeSuzanne() {
+  const g = new THREE.Group();
+  const fur = std(0x8d5a3b, { roughness: 0.7, flatShading: true });
+  const skin = std(0xe0b088, { roughness: 0.6, flatShading: true });
+  const white = std(0xf5f5f5, { roughness: 0.25 });
+  const black = std(0x111111, { roughness: 0.2 });
+  const add = (geo, mat, p, sc = [1, 1, 1], rot = [0, 0, 0]) => {
+    const m = new THREE.Mesh(geo, mat); m.position.set(...p); m.scale.set(...sc); m.rotation.set(...rot); g.add(m); return m;
+  };
+  add(new THREE.SphereGeometry(1, 14, 10), fur, [0, 0, 0], [1.02, 0.95, 0.92]);
+  add(new THREE.SphereGeometry(0.46, 12, 8), fur, [-1.1, 0.12, -0.12], [1, 1, 0.34], [0, -0.5, 0]);
+  add(new THREE.SphereGeometry(0.46, 12, 8), fur, [1.1, 0.12, -0.12], [1, 1, 0.34], [0, 0.5, 0]);
+  add(new THREE.SphereGeometry(0.3, 10, 6), skin, [-1.12, 0.12, -0.05], [1, 1, 0.3], [0, -0.5, 0]);
+  add(new THREE.SphereGeometry(0.3, 10, 6), skin, [1.12, 0.12, -0.05], [1, 1, 0.3], [0, 0.5, 0]);
+  add(new THREE.SphereGeometry(0.42, 12, 8), skin, [-0.36, 0.22, 0.62], [1, 1.12, 0.62]);
+  add(new THREE.SphereGeometry(0.42, 12, 8), skin, [0.36, 0.22, 0.62], [1, 1.12, 0.62]);
+  add(new THREE.SphereGeometry(0.58, 14, 8), skin, [0, -0.36, 0.62], [1.25, 0.72, 0.72]);
+  add(new THREE.SphereGeometry(0.2, 14, 10), white, [-0.36, 0.25, 0.86]);
+  add(new THREE.SphereGeometry(0.2, 14, 10), white, [0.36, 0.25, 0.86]);
+  add(new THREE.SphereGeometry(0.09, 10, 8), black, [-0.34, 0.24, 1.03]);
+  add(new THREE.SphereGeometry(0.09, 10, 8), black, [0.34, 0.24, 1.03]);
+  add(new THREE.TorusGeometry(0.28, 0.035, 6, 16, Math.PI), black, [0, -0.42, 1.02], [1, 0.6, 1], [Math.PI, 0, 0]);
+  add(new THREE.SphereGeometry(0.035, 6, 4), black, [-0.12, -0.17, 1.06]);
+  add(new THREE.SphereGeometry(0.035, 6, 4), black, [0.12, -0.17, 1.06]);
+  return { obj: g, mainMat: fur };
+}
+
+function makeIsland() {
+  const g = new THREE.Group();
+  const grass = std(0x6fbf4a, { roughness: 0.85, flatShading: true });
+  const dirt = std(0x8a5a3b, { roughness: 0.9, flatShading: true });
+  const bark = std(0x5b3a22, { roughness: 0.9, flatShading: true });
+  const leaf = std(0x2f8f4e, { roughness: 0.8, flatShading: true });
+  const rock = std(0x8f949c, { roughness: 0.8, flatShading: true });
+  const add = (geo, mat, p, rot = [0, 0, 0], sc = 1) => { const m = new THREE.Mesh(geo, mat); m.position.set(...p); m.rotation.set(...rot); m.scale.setScalar(sc); g.add(m); return m; };
+  add(new THREE.CylinderGeometry(1.75, 1.55, 0.35, 9), grass, [0, 0, 0]);
+  const dg = new THREE.CylinderGeometry(1.55, 0.35, 1.3, 9, 2);
+  const p = dg.attributes.position;
+  for (let i = 0; i < p.count; i++) { if (p.getY(i) < 0.6) { const k = 1 + Math.sin(i * 12.9898) * 0.12; p.setX(i, p.getX(i) * k); p.setZ(i, p.getZ(i) * k); } }
+  dg.computeVertexNormals();
+  add(dg, dirt, [0, -0.82, 0]);
+  add(new THREE.CylinderGeometry(0.12, 0.17, 0.95, 6), bark, [0.35, 0.62, -0.2]);
+  add(new THREE.ConeGeometry(0.85, 1.1, 7), leaf, [0.35, 1.3, -0.2]);
+  add(new THREE.ConeGeometry(0.66, 0.95, 7), leaf, [0.35, 1.78, -0.2], [0, 0.4, 0]);
+  add(new THREE.ConeGeometry(0.44, 0.8, 7), leaf, [0.35, 2.2, -0.2], [0, 0.8, 0]);
+  add(new THREE.IcosahedronGeometry(0.32, 0), leaf, [-0.75, 0.38, -0.55]);
+  add(new THREE.IcosahedronGeometry(0.22, 0), leaf, [-0.4, 0.3, -0.95]);
+  add(new THREE.DodecahedronGeometry(0.24, 0), rock, [-0.85, 0.28, 0.55], [0.3, 0.5, 0]);
+  add(new THREE.DodecahedronGeometry(0.14, 0), rock, [-0.5, 0.22, 0.95], [0.6, 0.1, 0.4]);
+  add(new THREE.DodecahedronGeometry(0.12, 0), rock, [1.1, 0.22, 0.6]);
+  return { obj: g, mainMat: grass };
+}
+
+function makeQueen() {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshPhysicalMaterial({ color: 0xf1ebe0, roughness: 0.22, clearcoat: 0.6, clearcoatRoughness: 0.2 });
+  const prof = [[0, 0], [.95, 0], [.98, .08], [.92, .18], [.78, .24], [.8, .32], [.68, .4], [.52, .5], [.45, .7], [.38, 1.1], [.32, 1.6], [.28, 1.95], [.42, 2.03], [.48, 2.1], [.3, 2.17], [.34, 2.3], [.47, 2.6], [.53, 2.74], [.42, 2.78], [.2, 2.83], [0, 2.9]]
+    .map(([x, y]) => new THREE.Vector2(x * 1.1, y * 1.1));
+  g.add(new THREE.Mesh(new THREE.LatheGeometry(prof, 56), mat));
+  for (let i = 0; i < 9; i++) {
+    const a = i / 9 * Math.PI * 2;
+    const b = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 8), mat);
+    b.position.set(Math.cos(a) * 0.55, 3.07, Math.sin(a) * 0.55); g.add(b);
+  }
+  const top = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 12), mat);
+  top.position.y = 3.3; g.add(top);
+  return { obj: g, mainMat: mat };
+}
+
+function lineMatFor() { return new THREE.LineBasicMaterial({ color: 0x000000 }); }
+function makeCameraHelper() {
+  const w = 0.9, h = 0.5, d = 1.4, m = lineMatFor();
+  const c = [new V3(-w, -h, d), new V3(w, -h, d), new V3(w, h, d), new V3(-w, h, d)], o = new V3();
+  const pts = [o, c[0], o, c[1], o, c[2], o, c[3], c[0], c[1], c[1], c[2], c[2], c[3], c[3], c[0]];
+  const t1 = new V3(-w * .5, h + .1, d), t2 = new V3(w * .5, h + .1, d), t3 = new V3(0, h + .5, d);
+  pts.push(t1, t2, t2, t3, t3, t1);
+  const ls = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), m);
+  const tri = new THREE.Mesh(new THREE.BufferGeometry().setFromPoints([t1, t2, t3]), new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide }));
+  tri.userData.helperFill = true;
+  const g = new THREE.Group(); g.add(ls, tri);
+  return { obj: g, lineMat: m, fillMat: tri.material };
+}
+function makeLightHelper(height) {
+  const m = lineMatFor(), g = new THREE.Group();
+  const ring = r => { const pts = []; for (let i = 0; i <= 32; i++) { const a = i / 32 * Math.PI * 2; pts.push(new V3(Math.cos(a) * r, Math.sin(a) * r, 0)); } return new THREE.BufferGeometry().setFromPoints(pts); };
+  const r1 = new THREE.Line(ring(0.22), m), r2 = new THREE.Line(ring(0.22), m), r3 = new THREE.Line(ring(0.38), m);
+  r2.rotation.y = Math.PI / 2; r3.rotation.x = Math.PI / 2;
+  const dm = new THREE.LineDashedMaterial({ color: 0x000000, dashSize: 0.15, gapSize: 0.12 });
+  const dl = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new V3(0, -0.25, 0), new V3(0, -height, 0)]), dm);
+  dl.computeLineDistances();
+  g.add(r1, r2, r3, dl);
+  return { obj: g, lineMat: m, dashMat: dm };
+}
+
+/* ================= OBJECT REGISTRY ================= */
+const objects = [], meshes = [];
+let uid = 0;
+function uniqueName(base) {
+  const names = new Set(objects.filter(o => !o.userData.deleted).map(o => o.userData.name));
+  if (!names.has(base)) return base;
+  for (let i = 1; ; i++) { const n = base + '.' + String(i).padStart(3, '0'); if (!names.has(n)) return n; }
+}
+function calcStats(root) {
+  let v = 0, t = 0;
+  root.traverse(m => {
+    if (!m.isMesh || m.userData.helperFill) return;
+    const geo = m.geometry, k = m.isInstancedMesh ? m.count : 1;
+    v += geo.attributes.position.count * k;
+    t += (geo.index ? geo.index.count : geo.attributes.position.count) / 3 * k;
+  });
+  return { v, t: Math.round(t) };
+}
+function register(inner, o) {
+  const root = new THREE.Group();
+  root.add(inner);
+  root.userData = { id: ++uid, name: uniqueName(o.name), type: o.type || 'mesh', icon: o.icon, desc: o.desc || '', mainMat: o.mainMat, anim: o.anim, inner, lineMat: o.lineMat, extraMats: o.extraMats || [], deleted: false };
+  if (o.pos) root.position.set(...o.pos);
+  inner.traverse(m => {
+    if (m.isMesh && !m.userData.helperFill) { m.castShadow = true; m.receiveShadow = true; m.userData.orig = m.material; meshes.push(m); applyShadeTo(m); }
+  });
+  root.userData.stats = calcStats(root);
+  scene.add(root); objects.push(root);
+  return root;
+}
+
+const DESC = {
+  cube: '<b>Куб по умолчанию.</b> Первое, что видит каждый, кто открывает Blender. Самый известный мем сообщества — первым делом удалить его клавишей <b>X</b>. Попробуйте! Вернуть — <b>Ctrl+Z</b>.',
+  donut: '<b>Пончик</b> — легендарный урок для новичков от Blender Guru (Эндрю Прайс). Глазурь здесь сделана из верхней половины тора с «подтёками», а посыпка — 150 копий одной капсулы (в Blender это делают через частицы или Geometry Nodes).',
+  suzanne: '<b>Сюзанна</b> — талисман Blender, обезьянка, которая есть в меню «Добавить → Сетка». Используется для тестов материалов и освещения. Здесь — упрощённая low-poly версия с плоским затенением.',
+  island: '<b>Летающий остров</b> в стиле low-poly: мало полигонов, Flat Shading и яркие цвета. Самый популярный стиль для первых сцен и инди-игр.',
+  queen: '<b>Шахматный ферзь</b> сделан вращением профиля вокруг оси — в Blender это инструмент <b>Spin</b> или модификатор <b>Screw</b>. Материал похож на Principled BSDF с Clearcoat (лак).',
+  camera: '<b>Камера.</b> Именно из неё делается рендер по <b>F12</b>. <b>Numpad 0</b> — посмотреть через камеру. Подвиньте её инструментом «Перемещение» и отрендерьте снова.',
+  light: '<b>Точечный свет (Point).</b> В Blender есть ещё Sun, Spot и Area. Свет виден в режиме затенения «Рендер» — попробуйте поменять мощность.',
+  prim: '<b>Примитив</b>, добавленный через меню «Добавить». В Blender с него начинается почти любая модель: дальше Tab, выдавливание (E), фаски (Ctrl+B) и разрезы (Ctrl+R).',
+};
+
+function buildScene() {
+  let r;
+  r = makeCube(); register(r.obj, { name: 'Куб', mainMat: r.mainMat, pos: [0, 1, 0], desc: DESC.cube, anim: (o, t) => { o.rotation.y = t * Math.PI; o.position.y = Math.abs(Math.sin(t * Math.PI * 4)) * 0.6; } });
+  r = makeDonut(); register(r.obj, { name: 'Пончик', mainMat: r.mainMat, pos: [-4.6, 0.46, 1], desc: DESC.donut, anim: (o, t) => { o.rotation.y = t * Math.PI * 2; } });
+  r = makeSuzanne(); const suz = register(r.obj, { name: 'Сюзанна', mainMat: r.mainMat, pos: [4.6, 1.15, 0.6], desc: DESC.suzanne, anim: (o, t) => { o.rotation.x = Math.sin(t * Math.PI * 4) * 0.18; o.rotation.y = Math.sin(t * Math.PI * 2) * 0.5; } });
+  suz.rotation.y = 0.45;
+  r = makeIsland(); register(r.obj, { name: 'Остров', mainMat: r.mainMat, pos: [-3.4, 1.6, -5], desc: DESC.island, anim: (o, t) => { o.position.y = Math.sin(t * Math.PI * 4) * 0.18; o.rotation.y = t * Math.PI * 2; } });
+  r = makeQueen(); register(r.obj, { name: 'Ферзь', mainMat: r.mainMat, pos: [3.6, 0, -4.6], desc: DESC.queen, anim: (o, t) => { o.rotation.y = t * Math.PI * 2; } });
+
+  r = makeCameraHelper();
+  const cam = register(r.obj, { name: 'Камера', type: 'camera', lineMat: r.lineMat, extraMats: [r.fillMat], pos: [14, 9.2, 13.5], desc: DESC.camera });
+  cam.lookAt(0, 1.1, -1.8);
+  const lightPos = [4.1, 6.2, 1.2];
+  r = makeLightHelper(lightPos[1]);
+  const pl = new THREE.PointLight(0xfff2e0, 0, 0, 2);
+  const lr = register(r.obj, { name: 'Свет', type: 'light', lineMat: r.lineMat, extraMats: [r.dashMat], pos: lightPos, desc: DESC.light });
+  lr.add(pl); lr.userData.light = pl; lr.userData.power = 70;
+}
+
+/* ================= SHADING MODES ================= */
+let shading = 'solid';
+function applyShadeTo(m) {
+  m.material = shading === 'wire' ? wireMat : shading === 'solid' ? solidMat : m.userData.orig;
+}
+function setShading(mode, silent) {
+  shading = mode;
+  meshes.forEach(applyShadeTo);
+  const lit = mode === 'material' || mode === 'rendered', rend = mode === 'rendered';
+  scene.environment = lit ? envTex : null;
+  scene.environmentIntensity = rend ? 0.5 : 1;
+  hemi.intensity = mode === 'solid' ? 1.6 : 0;
+  keyL.intensity = mode === 'solid' ? 1.7 : 0;
+  sun.intensity = rend ? 2.6 : 0; sun.castShadow = rend;
+  objects.forEach(o => { if (o.userData.light) o.userData.light.intensity = rend ? o.userData.power : 0; });
+  shadowFloor.visible = rend;
+  renderer.toneMapping = lit ? THREE.AgXToneMapping : THREE.NoToneMapping;
+  if (!silent) {
+    $$('#shadeSeg button').forEach(b => b.classList.toggle('on', b.dataset.shade === mode));
+    const names = { wire: 'Каркас', solid: 'Сплошной', material: 'Предпросмотр материалов', rendered: 'Рендер' };
+    report('Затенение: ' + names[mode]);
+  }
+}
+
+/* ================= SELECTION ================= */
+const selected = new Set();
+let active = null, editMode = false, tool = 'select';
+const overlays = [];
+const editLine = new THREE.LineBasicMaterial({ color: 0xffa033, transparent: true, opacity: 0.75 });
+const editPts = new THREE.PointsMaterial({ color: 0xff8a00, size: 3.5, sizeAttenuation: false });
+
+const live = () => objects.filter(o => !o.userData.deleted);
+function select(obj, additive) {
+  if (!additive) selected.clear();
+  if (obj) {
+    if (additive && selected.has(obj) && active === obj) { selected.delete(obj); active = [...selected].pop() || null; }
+    else { selected.add(obj); active = obj; }
+  } else active = additive ? active : null;
+  refresh();
+}
+function clearOverlays() { overlays.forEach(o => { o.parent && o.parent.remove(o); if (o.isLineSegments) o.geometry.dispose(); }); overlays.length = 0; }
+function buildOverlays() {
+  clearOverlays();
+  if (!editMode) return;
+  selected.forEach(o => {
+    if (o.userData.type !== 'mesh') return;
+    o.userData.inner.traverse(m => {
+      if (!m.isMesh || m.isInstancedMesh) return;
+      const w = new THREE.LineSegments(new THREE.WireframeGeometry(m.geometry), editLine);
+      const p = new THREE.Points(m.geometry, editPts);
+      w.raycast = p.raycast = () => {};
+      m.add(w, p); overlays.push(w, p);
+    });
+  });
+}
+function refresh() {
+  for (const o of selected) if (o.userData.deleted || !o.visible) selected.delete(o);
+  if (active && !selected.has(active)) active = [...selected].pop() || null;
+  outline.selectedObjects = editMode ? [] : [...selected].filter(o => o.userData.type === 'mesh');
+  objects.forEach(o => {
+    if (!o.userData.lineMat) return;
+    const c = o === active ? 0xffb347 : selected.has(o) ? 0xf08a24 : 0x000000;
+    o.userData.lineMat.color.setHex(c); o.userData.extraMats.forEach(m => m.color.setHex(c));
+  });
+  if (tool !== 'select' && active) tc.attach(active); else tc.detach();
+  buildOverlays();
+  renderOutliner(); renderProps(); updateText(); drawTimeline();
+}
+
+/* ================= OUTLINER ================= */
+const olEl = $('#outliner');
+function renderOutliner() {
+  let h = `<div class="ol-row" style="padding-left:6px">${IC.scene}<span class="nm">Коллекция сцены</span></div>`;
+  h += `<div class="ol-row" style="padding-left:10px">${IC.caret}${IC.coll}<span class="nm">Коллекция</span></div>`;
+  live().forEach(o => {
+    const cls = (selected.has(o) ? ' sel' : '') + (o === active ? ' act' : '') + (o.visible ? '' : ' hid');
+    h += `<div class="ol-row${cls}" data-id="${o.userData.id}" style="padding-left:40px">${IC[o.userData.type]}<span class="nm">${esc(o.userData.name)}</span><button class="eye" data-eye="${o.userData.id}" title="Скрыть/показать (H)">${o.visible ? IC.eye : IC.eyeOff}</button></div>`;
+  });
+  olEl.innerHTML = h;
+}
+olEl.addEventListener('click', e => {
+  const eye = e.target.closest('[data-eye]');
+  if (eye) { const o = byId(+eye.dataset.eye); o.visible = !o.visible; refresh(); return; }
+  const row = e.target.closest('[data-id]');
+  if (row) { const o = byId(+row.dataset.id); if (o.visible) select(o, e.ctrlKey || e.shiftKey); }
+});
+olEl.addEventListener('dblclick', e => { const row = e.target.closest('[data-id]'); if (row) frameObjects([byId(+row.dataset.id)]); });
+const byId = id => objects.find(o => o.userData.id === id);
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/* ================= PROPERTIES ================= */
+let ptab = 'object';
+let liveSyncs = [];
+const pc = $('#pcontent');
+$('#ptabs').addEventListener('click', e => { const b = e.target.closest('[data-ptab]'); if (!b) return; ptab = b.dataset.ptab; $$('#ptabs button').forEach(x => x.classList.toggle('on', x === b)); renderProps(); });
+
+function numField({ label = '', get, set, step = 0.1, min = -Infinity, max = Infinity, fmt = v => v.toFixed(3), slider = false }) {
+  const el = document.createElement('div'); el.className = 'nf' + (slider ? ' sl' : '');
+  el.innerHTML = `<i class="fill"></i><span class="l">${label}</span><input spellcheck="false" inputmode="decimal">`;
+  const inp = el.querySelector('input'), fill = el.querySelector('.fill');
+  const sync = () => { if (document.activeElement === inp) return; const v = get(); inp.value = fmt(v); if (slider) fill.style.width = ((v - min) / (max - min) * 100) + '%'; };
+  let sx = 0, start = 0, moved = false, drag = false;
+  el.addEventListener('pointerdown', e => { if (el.classList.contains('edit')) return; e.preventDefault(); el.setPointerCapture(e.pointerId); sx = e.clientX; start = get(); moved = false; drag = true; });
+  el.addEventListener('pointermove', e => {
+    if (!drag) return; const dx = e.clientX - sx; if (Math.abs(dx) > 3) moved = true;
+    if (moved) { set(Math.min(max, Math.max(min, start + dx * step * (e.shiftKey ? 0.1 : 1)))); sync(); liveSyncs.forEach(f => f()); }
+  });
+  el.addEventListener('pointerup', () => { if (!drag) return; drag = false; if (!moved) { el.classList.add('edit'); inp.value = String(+get().toFixed(4)); inp.focus(); inp.select(); } });
+  const commit = () => { const v = parseFloat(inp.value.replace(',', '.')); el.classList.remove('edit'); inp.blur(); if (!isNaN(v)) set(Math.min(max, Math.max(min, v))); sync(); liveSyncs.forEach(f => f()); };
+  inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') commit(); if (e.key === 'Escape') { el.classList.remove('edit'); inp.blur(); sync(); } });
+  inp.addEventListener('blur', () => { if (el.classList.contains('edit')) commit(); });
+  sync(); liveSyncs.push(sync);
+  return el;
+}
+// Blender is Z-up: X = x, Y = -z, Z = y
+const AX = ['X', 'Y', 'Z'];
+const locGet = (o, i) => [o.position.x, -o.position.z, o.position.y][i];
+const locSet = (o, i, v) => { if (i === 0) o.position.x = v; else if (i === 1) o.position.z = -v; else o.position.y = v; };
+const rotGet = (o, i) => [o.rotation.x, -o.rotation.z, o.rotation.y][i] / DEG;
+const rotSet = (o, i, v) => { v *= DEG; if (i === 0) o.rotation.x = v; else if (i === 1) o.rotation.z = -v; else o.rotation.y = v; };
+const sclGet = (o, i) => [o.scale.x, o.scale.z, o.scale.y][i];
+const sclSet = (o, i, v) => { if (i === 0) o.scale.x = v; else if (i === 1) o.scale.z = v; else o.scale.y = v; };
+
+function panel(title, open = true) {
+  const d = document.createElement('details'); d.className = 'panel'; d.open = open;
+  d.innerHTML = `<summary>${title}</summary><div class="pb"></div>`;
+  pc.appendChild(d); return d.querySelector('.pb');
+}
+function prow(parent, label, content) {
+  const r = document.createElement('div'); r.className = 'prow';
+  r.innerHTML = `<label>${label}</label>`;
+  const c = document.createElement('div'); typeof content === 'string' ? c.innerHTML = content : c.appendChild(content);
+  r.appendChild(c); parent.appendChild(r); return c;
+}
+function vecRow(parent, label, o, get, set, step, fmt) {
+  const v = document.createElement('div'); v.className = 'vec';
+  for (let i = 0; i < 3; i++) v.appendChild(numField({ label: AX[i], get: () => get(o, i), set: x => set(o, i, x), step, fmt }));
+  prow(parent, label, v);
+}
+function checkbox(parent, label, value, on) {
+  const l = document.createElement('label'); l.className = 'chk';
+  l.innerHTML = `<input type="checkbox" ${value ? 'checked' : ''}><span>${label}</span>`;
+  l.querySelector('input').addEventListener('change', e => on(e.target.checked));
+  prow(parent, '', l);
+}
+
+function renderProps() {
+  if (document.activeElement && pc.contains(document.activeElement)) return;
+  liveSyncs = []; pc.innerHTML = '';
+  const o = active;
+  if (ptab === 'world') return renderWorld();
+  if (!o) { pc.innerHTML = '<p class="muted" style="padding:8px">Нет активного объекта. Кликните по модели во вьюпорте или в «Структуре проекта».</p>'; return; }
+  const t = document.createElement('div'); t.className = 'ptitle';
+  t.innerHTML = `${IC[o.userData.type]}<span>${esc(o.userData.name)}</span>`; pc.appendChild(t);
+
+  if (ptab === 'object') {
+    let p = panel('Объект');
+    const name = document.createElement('input'); name.className = 'txt'; name.value = o.userData.name; name.spellcheck = false;
+    name.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') name.blur(); });
+    name.addEventListener('change', () => { const v = name.value.trim(); if (v) { o.userData.name = v === o.userData.name ? v : uniqueName(v); } name.blur(); refresh(); });
+    prow(p, 'Имя', name);
+    p = panel('Трансформация');
+    vecRow(p, 'Положение', o, locGet, locSet, 0.02, v => v.toFixed(2) + ' м');
+    vecRow(p, 'Вращение', o, rotGet, rotSet, 1, v => v.toFixed(1) + '°');
+    vecRow(p, 'Масштаб', o, sclGet, (ob, i, v) => sclSet(ob, i, Math.max(0.01, v)), 0.01, v => v.toFixed(3));
+    if (o.userData.light) {
+      p = panel('Свет');
+      prow(p, 'Мощность', numField({ get: () => o.userData.power, set: v => { o.userData.power = v; if (shading === 'rendered') o.userData.light.intensity = v; }, step: 1, min: 0, max: 300, fmt: v => Math.round(v) + ' Вт', slider: true }));
+    }
+    p = panel('О модели');
+    p.innerHTML = `<p class="desc">${o.userData.desc}</p>`;
+    if (o.userData.type === 'mesh') {
+      p = panel('Статистика', false);
+      p.innerHTML = `<div class="kv"><span>Вершины</span><span>${fmtN(o.userData.stats.v)}</span><span>Треугольники</span><span>${fmtN(o.userData.stats.t)}</span></div>`;
+    }
+  } else if (ptab === 'material') {
+    const m = o.userData.mainMat;
+    if (!m) { pc.insertAdjacentHTML('beforeend', '<p class="muted" style="padding:6px">У этого объекта нет материала.</p>'); return; }
+    const p = panel('Поверхность · Principled BSDF');
+    const col = document.createElement('input'); col.type = 'color'; col.className = 'colorf'; col.value = '#' + m.color.getHexString();
+    col.addEventListener('input', () => { m.color.set(col.value); ensureLit(); });
+    prow(p, 'Базовый цвет', col);
+    prow(p, 'Металлич.', numField({ get: () => m.metalness, set: v => { m.metalness = v; ensureLit(); }, step: 0.005, min: 0, max: 1, slider: true }));
+    prow(p, 'Шероховат.', numField({ get: () => m.roughness, set: v => { m.roughness = v; ensureLit(); }, step: 0.005, min: 0, max: 1, slider: true }));
+    const n = panel('Подсказка');
+    n.innerHTML = '<p class="desc">Цвет виден в режимах затенения <b>«Материал»</b> и <b>«Рендер»</b> (кнопки справа вверху вьюпорта или клавиша <b>Z</b>).</p>';
+  }
+}
+function ensureLit() { if (shading === 'solid' || shading === 'wire') setShading('material'); }
+function renderWorld() {
+  const t = document.createElement('div'); t.className = 'ptitle';
+  t.innerHTML = `<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="#e05555" stroke-width="1.4"/></svg><span>World</span>`; pc.appendChild(t);
+  const p = panel('Фон');
+  const col = document.createElement('input'); col.type = 'color'; col.className = 'colorf'; col.value = '#' + worldColor.getHexString();
+  col.addEventListener('input', () => worldColor.set(col.value));
+  prow(p, 'Цвет', col);
+  const q = panel('Наложения вьюпорта');
+  checkbox(q, 'Сетка пола', grid.visible, v => { grid.visible = axes.visible = v; });
+  checkbox(q, 'Статистика', showStats, v => { showStats = v; updateText(); });
+  checkbox(q, '3D-курсор', cursor3d.visible, v => { cursor3d.visible = v; });
+}
+const fmtN = n => n.toLocaleString('ru-RU');
+
+/* ================= VIEWPORT TEXT / STATUS ================= */
+let viewName = 'Пользовательская перспектива', showStats = true;
+function sceneStats() {
+  let v = 0, t = 0; const vis = live().filter(o => o.visible);
+  vis.forEach(o => { v += o.userData.stats.v; t += o.userData.stats.t; });
+  return { v, t, n: vis.length };
+}
+function updateText() {
+  const s = sceneStats();
+  const sel = [...selected], sv = sel.reduce((a, o) => a + o.userData.stats.v, 0), st = sel.reduce((a, o) => a + o.userData.stats.t, 0);
+  let h = `${viewName}<br>(${frame}) Коллекция${active ? ' | ' + esc(active.userData.name) : ''}`;
+  if (showStats) h += `<div class="s"><b>Объекты</b>${sel.length} / ${s.n}<br><b>Вершины</b>${sel.length ? fmtN(sv) + ' / ' : ''}${fmtN(s.v)}<br><b>Треугольники</b>${sel.length ? fmtN(st) + ' / ' : ''}${fmtN(s.t)}</div>`;
+  $('#vpText').innerHTML = h;
+  $('#statusRight').textContent = `Коллекция${active ? ' | ' + active.userData.name : ''} | Вершины ${fmtN(s.v)} | Треуг. ${fmtN(s.t)} | Объекты ${sel.length}/${s.n} | фан-сайт 1.0`;
+}
+let repT;
+function report(text) {
+  const r = $('#report'); r.querySelector('span').textContent = text; r.classList.add('on');
+  clearTimeout(repT); repT = setTimeout(() => r.classList.remove('on'), 2600);
+}
+let hintT;
+function hint(text) { const h = $('#vpHint'); h.textContent = text; h.classList.add('on'); clearTimeout(hintT); hintT = setTimeout(() => h.classList.remove('on'), 2200); }
+
+/* ================= CAMERA NAVIGATION ================= */
+let tween = null;
+function flyTo(pos, target, d = 450) { tween = { p0: camera.position.clone(), t0: controls.target.clone(), p1: pos, t1: target, s: performance.now(), d }; }
+controls.addEventListener('start', () => { tween = null; if (viewName !== 'Пользовательская перспектива') { viewName = 'Пользовательская перспектива'; updateText(); } });
+function setView(dir, name) {
+  const dist = camera.position.distanceTo(controls.target);
+  flyTo(controls.target.clone().addScaledVector(dir.clone().normalize(), dist), controls.target.clone());
+  viewName = name; updateText();
+}
+function frameObjects(list) {
+  list = list.filter(o => o.visible && !o.userData.deleted);
+  if (!list.length) list = live().filter(o => o.visible && o.userData.type === 'mesh');
+  if (!list.length) return;
+  const box = new THREE.Box3(); list.forEach(o => box.expandByObject(o));
+  const sph = box.getBoundingSphere(new THREE.Sphere());
+  const dist = Math.max(2.5, sph.radius / Math.sin(camera.fov * DEG / 2) * 1.05);
+  const dir = camera.position.clone().sub(controls.target).normalize();
+  flyTo(sph.center.clone().addScaledVector(dir, dist), sph.center.clone());
+}
+function cameraView() {
+  const c = live().find(o => o.userData.type === 'camera');
+  if (!c) { report('В сцене нет камеры'); return; }
+  const p = c.getWorldPosition(new V3()), f = new V3(0, 0, 1).applyQuaternion(c.getWorldQuaternion(new THREE.Quaternion()));
+  flyTo(p, p.clone().addScaledVector(f, 18));
+  viewName = 'Перспектива камеры'; updateText();
+}
+$('#navCam').onclick = cameraView;
+$('#navHome').onclick = () => frameObjects(live());
+
+/* ---- navigation gizmo ---- */
+const GZ = [
+  { k: 'X', v: new V3(1, 0, 0), c: '#ff3352', view: 'Вид справа' }, { k: '-X', v: new V3(-1, 0, 0), c: '#ff3352', view: 'Вид слева' },
+  { k: 'Y', v: new V3(0, 0, -1), c: '#8bdc00', view: 'Вид сзади' }, { k: '-Y', v: new V3(0, 0, 1), c: '#8bdc00', view: 'Вид спереди' },
+  { k: 'Z', v: new V3(0, 1, 0), c: '#2890ff', view: 'Вид сверху' }, { k: '-Z', v: new V3(0, -1, 0), c: '#2890ff', view: 'Вид снизу' },
+];
+const gzG = $('#gzAxes'), SVGNS = 'http://www.w3.org/2000/svg';
+GZ.forEach(a => {
+  const neg = a.k[0] === '-';
+  a.line = document.createElementNS(SVGNS, 'line'); a.line.setAttribute('stroke', a.c); a.line.setAttribute('stroke-width', 2.2);
+  a.g = document.createElementNS(SVGNS, 'g'); a.g.style.cursor = 'pointer';
+  const c = document.createElementNS(SVGNS, 'circle'); c.setAttribute('r', neg ? 7.5 : 9);
+  c.setAttribute('fill', neg ? a.c + '55' : a.c); c.setAttribute('stroke', neg ? a.c : 'none'); c.setAttribute('stroke-width', 1.5);
+  a.g.appendChild(c);
+  if (!neg) { const t = document.createElementNS(SVGNS, 'text'); t.textContent = a.k; t.setAttribute('text-anchor', 'middle'); t.setAttribute('dy', '4'); t.setAttribute('fill', '#111'); a.g.appendChild(t); }
+  a.g.addEventListener('click', e => { e.stopPropagation(); setView(a.v.clone().add(new V3(0, 0, a.v.y ? 0.0001 : 0)), a.view); });
+  if (!neg) gzG.appendChild(a.line);
+  gzG.appendChild(a.g);
+});
+const qInv = new THREE.Quaternion();
+function updateGizmo() {
+  qInv.copy(camera.quaternion).invert();
+  GZ.forEach(a => {
+    const p = a.v.clone().applyQuaternion(qInv);
+    a.x = 45 + p.x * 30; a.y = 45 - p.y * 30; a.z = p.z;
+    a.g.setAttribute('transform', `translate(${a.x.toFixed(1)},${a.y.toFixed(1)})`);
+    if (a.k[0] !== '-') { a.line.setAttribute('x1', 45); a.line.setAttribute('y1', 45); a.line.setAttribute('x2', a.x); a.line.setAttribute('y2', a.y); }
+  });
+  [...GZ].sort((a, b) => a.z - b.z).forEach(a => { if (a.k[0] !== '-') gzG.appendChild(a.line); gzG.appendChild(a.g); });
+}
+
+/* ================= PICKING ================= */
+const ray = new THREE.Raycaster(); ray.params.Line.threshold = 0.14;
+let down = null, mouse = { x: innerWidth / 2, y: innerHeight / 2 };
+const cv = renderer.domElement;
+cv.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, b: e.button, tc: tc.dragging || tc.axis !== null }; cv.focus(); });
+addEventListener('pointermove', e => { mouse = { x: e.clientX, y: e.clientY }; });
+cv.addEventListener('pointerup', e => {
+  if (!down) return;
+  const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y) > 5;
+  if (down.b === 0 && !moved && !down.tc) pick(e);
+  if (down.b === 2 && !moved) openMenu(MENUS.context, e.clientX, e.clientY, 'Объект');
+  down = null;
+});
+cv.addEventListener('contextmenu', e => e.preventDefault());
+function pick(e) {
+  const r = cv.getBoundingClientRect();
+  ray.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), camera);
+  const hits = ray.intersectObjects(live().filter(o => o.visible), true);
+  for (const h of hits) {
+    let o = h.object; while (o && !o.userData.id) o = o.parent;
+    if (o) return select(o, e.shiftKey || e.ctrlKey);
+  }
+  if (!e.shiftKey) select(null);
+}
+
+/* ================= OPERATIONS ================= */
+const undoStack = [];
+function deleteSelected() {
+  const list = [...selected]; if (!list.length) { report('Ничего не выделено'); return; }
+  list.forEach(o => { o.userData.deleted = true; o.visible = false; });
+  undoStack.push({ type: 'delete', list });
+  report(`Удалено объектов: ${list.length}. Вернуть — Ctrl+Z`);
+  if (list.some(o => o.userData.name === 'Куб')) hint('Классика! Куб удалён 🧊 → Ctrl+Z вернёт его');
+  selected.clear(); active = null; refresh();
+}
+function undo() {
+  const u = undoStack.pop(); if (!u) { report('Нечего отменять'); return; }
+  if (u.type === 'delete') { u.list.forEach(o => { o.userData.deleted = false; o.visible = true; o.userData.name = uniqueName(o.userData.name); }); selected.clear(); u.list.forEach(o => selected.add(o)); active = u.list[0]; report('Отменено: удаление'); }
+  if (u.type === 'add') { u.obj.userData.deleted = true; u.obj.visible = false; report('Отменено: добавление'); }
+  refresh();
+}
+function hideSelected() { if (!selected.size) return; selected.forEach(o => o.visible = false); report('Скрыто. Alt+H — показать'); refresh(); }
+function unhideAll() { live().forEach(o => o.visible = true); report('Показаны все объекты'); refresh(); }
+function selectAll() { live().filter(o => o.visible).forEach(o => selected.add(o)); active = active || [...selected][0] || null; refresh(); }
+function invertSel() { const all = live().filter(o => o.visible); const s = all.filter(o => !selected.has(o)); selected.clear(); s.forEach(o => selected.add(o)); active = s[0] || null; refresh(); }
+function toggleEdit() {
+  if (!editMode && (!active || active.userData.type !== 'mesh')) { report('Режим правки — только для сеток. Выделите модель'); return; }
+  editMode = !editMode;
+  $('#modeBtn span').textContent = editMode ? 'Режим правки' : 'Объектный режим';
+  $('#modeBtn svg rect').setAttribute('fill', editMode ? '#7aa6ff' : '#ffa033');
+  report(editMode ? 'Режим правки: видны вершины и рёбра' : 'Объектный режим');
+  refresh();
+}
+function setTool(t) {
+  tool = t; $$('#toolbar [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
+  if (t !== 'select') tc.setMode(t);
+  if (t !== 'select' && !active) hint('Выделите объект, чтобы появился манипулятор');
+  refresh();
+}
+$('#toolbar').addEventListener('click', e => { const b = e.target.closest('[data-tool]'); if (b) setTool(b.dataset.tool); });
+
+const PRIMS = {
+  cube:   { name: 'Куб', icon: 'cube', geo: () => new THREE.BoxGeometry(2, 2, 2), y: 1 },
+  sphere: { name: 'Сфера', icon: 'sphere', geo: () => new THREE.SphereGeometry(1, 32, 16), y: 1 },
+  ico:    { name: 'Икосфера', icon: 'ico', geo: () => new THREE.IcosahedronGeometry(1, 2), y: 1, flat: true },
+  cyl:    { name: 'Цилиндр', icon: 'cyl', geo: () => new THREE.CylinderGeometry(1, 1, 2, 32), y: 1 },
+  cone:   { name: 'Конус', icon: 'cone', geo: () => new THREE.ConeGeometry(1, 2, 32), y: 1 },
+  torus:  { name: 'Тор', icon: 'torus', geo: () => new THREE.TorusGeometry(0.75, 0.25, 16, 48).rotateX(-Math.PI / 2), y: 0.25 },
+  monkey: { name: 'Обезьяна', icon: 'monkey', y: 1.15 },
+};
+function addPrim(k) {
+  const P = PRIMS[k]; let inner, mat;
+  if (k === 'monkey') { const r = makeSuzanne(); inner = r.obj; mat = r.mainMat; }
+  else { mat = std(0xcccccc, { flatShading: !!P.flat }); inner = new THREE.Mesh(P.geo(), mat); }
+  const c = cursor3d.position;
+  const o = register(inner, { name: P.name, mainMat: mat, pos: [c.x, P.y, c.z], desc: k === 'monkey' ? DESC.suzanne : DESC.prim });
+  undoStack.push({ type: 'add', obj: o });
+  selected.clear(); selected.add(o); active = o;
+  report(`Добавлено: ${o.userData.name}`); refresh();
+}
+
+/* ================= MENUS ================= */
+const MENUS = {
+  view: [
+    { l: 'Показать всё', k: 'Home', a: () => frameObjects(live()) },
+    { l: 'Показать выделенное', k: 'Numpad .', a: () => frameObjects([...selected]) },
+    { sep: 1 },
+    { l: 'Камера', k: 'Numpad 0', a: cameraView },
+    { l: 'Спереди', k: 'Numpad 1', a: () => setView(new V3(0, 0, 1), 'Вид спереди') },
+    { l: 'Справа', k: 'Numpad 3', a: () => setView(new V3(1, 0, 0), 'Вид справа') },
+    { l: 'Сверху', k: 'Numpad 7', a: () => setView(new V3(0, 1, 0.0001), 'Вид сверху') },
+    { sep: 1 },
+    { l: 'Воспроизвести анимацию', k: 'Пробел', a: () => togglePlay() },
+  ],
+  select: [
+    { l: 'Всё', k: 'A', a: selectAll },
+    { l: 'Ничего', k: 'Alt A', a: () => select(null) },
+    { l: 'Инвертировать', k: 'Ctrl I', a: invertSel },
+  ],
+  add: [
+    { t: 'Сетка' },
+    ...Object.entries(PRIMS).map(([k, p]) => ({ l: p.name, i: IC[p.icon], a: () => addPrim(k) })),
+  ],
+  object: [
+    { l: 'Режим правки', k: 'Tab', a: toggleEdit },
+    { sep: 1 },
+    { l: 'Перемещение', k: 'G', a: () => setTool('translate') },
+    { l: 'Вращение', k: 'R', a: () => setTool('rotate') },
+    { l: 'Масштаб', k: 'S', a: () => setTool('scale') },
+    { sep: 1 },
+    { l: 'Скрыть выделенное', k: 'H', a: hideSelected },
+    { l: 'Показать скрытое', k: 'Alt H', a: unhideAll },
+    { l: 'Удалить', k: 'X', a: deleteSelected },
+  ],
+  file: [
+    { l: 'Новый (сбросить сцену)', k: 'Ctrl N', a: () => location.reload() },
+    { l: 'Сохранить скриншот вьюпорта', a: saveViewport },
+    { sep: 1 },
+    { l: 'Показать заставку', a: () => showSplash() },
+  ],
+  edit: [
+    { l: 'Отменить', k: 'Ctrl Z', a: undo },
+    { sep: 1 },
+    { l: 'Удалить', k: 'X', a: deleteSelected },
+  ],
+  render: [
+    { l: 'Рендер изображения', k: 'F12', a: () => openRender() },
+    { l: 'Воспроизвести анимацию', k: 'Пробел', a: () => togglePlay() },
+  ],
+  window: [
+    { l: 'Layout', a: () => setWs('layout') },
+    { l: 'О Blender', a: () => setWs('about') },
+    { l: 'Горячие клавиши', a: () => setWs('keys') },
+  ],
+  help: [
+    { l: 'Руководство Blender (сайт)', a: () => open('https://docs.blender.org/manual/ru/latest/', '_blank', 'noopener') },
+    { l: 'Скачать Blender', a: () => open('https://www.blender.org/download/', '_blank', 'noopener') },
+    { sep: 1 },
+    { l: 'Горячие клавиши', a: () => setWs('keys') },
+    { l: 'О сайте', a: () => showSplash() },
+  ],
+  context: [
+    { l: 'Режим правки', k: 'Tab', a: toggleEdit },
+    { l: 'Показать выделенное', k: 'Numpad .', a: () => frameObjects([...selected]) },
+    { sep: 1 },
+    { l: 'Скрыть', k: 'H', a: hideSelected },
+    { l: 'Удалить', k: 'X', a: deleteSelected },
+  ],
+};
+let menuEl = null, menuBtn = null;
+function closeMenu() { if (menuEl) menuEl.remove(); menuEl = null; if (menuBtn) menuBtn.classList.remove('open'); menuBtn = null; }
+function openMenu(items, x, y, title, btn) {
+  closeMenu(); closePie();
+  menuEl = document.createElement('div'); menuEl.className = 'menu';
+  menuEl.innerHTML = (title ? `<div class="mt">${title}</div>` : '') + items.map((it, i) =>
+    it.sep ? '<div class="msep"></div>' : it.t ? `<div class="mt">${it.t}</div>` : `<div class="mi" data-i="${i}">${it.i || ''}<span>${it.l}</span>${it.k ? `<span class="k">${it.k}</span>` : ''}</div>`).join('');
+  document.body.appendChild(menuEl);
+  const r = menuEl.getBoundingClientRect();
+  menuEl.style.left = Math.max(4, Math.min(x, innerWidth - r.width - 4)) + 'px';
+  menuEl.style.top = Math.max(4, Math.min(y, innerHeight - r.height - 4)) + 'px';
+  menuEl.addEventListener('click', e => { const mi = e.target.closest('[data-i]'); if (!mi) return; const it = items[+mi.dataset.i]; closeMenu(); it.a(); });
+  if (btn) { menuBtn = btn; btn.classList.add('open'); }
+}
+addEventListener('pointerdown', e => {
+  if (menuEl && !menuEl.contains(e.target) && !e.target.closest('[data-top],[data-vmenu]')) closeMenu();
+  if (pieEl && !pieEl.contains(e.target)) closePie();
+}, true);
+$$('[data-top]').forEach(b => {
+  b.addEventListener('click', () => { if (menuBtn === b) return closeMenu(); const r = b.getBoundingClientRect(); openMenu(MENUS[b.dataset.top], r.left, r.bottom + 2, null, b); });
+  b.addEventListener('mouseenter', () => { if (menuEl && menuBtn && menuBtn !== b && menuBtn.dataset.top) b.click(); });
+});
+$$('[data-vmenu]').forEach(b => b.addEventListener('click', () => { if (menuBtn === b) return closeMenu(); const r = b.getBoundingClientRect(); openMenu(MENUS[b.dataset.vmenu], r.left, r.bottom + 2, null, b); }));
+$('#modeBtn').addEventListener('click', () => { const r = $('#modeBtn').getBoundingClientRect(); openMenu([{ l: 'Объектный режим', a: () => editMode && toggleEdit() }, { l: 'Режим правки', k: 'Tab', a: () => !editMode && toggleEdit() }], r.left, r.bottom + 2, null, $('#modeBtn')); });
+$('#shadeSeg').addEventListener('click', e => { const b = e.target.closest('[data-shade]'); if (b) setShading(b.dataset.shade); });
+
+let pieEl = null;
+function closePie() { if (pieEl) pieEl.remove(); pieEl = null; }
+function openPie(x, y) {
+  closeMenu(); closePie();
+  const opts = [['wire', 'Каркас', -130, 0], ['rendered', 'Рендер', 130, 0], ['solid', 'Сплошной', 0, -70], ['material', 'Материал', 0, 70]];
+  pieEl = document.createElement('div'); pieEl.className = 'pie';
+  pieEl.innerHTML = '<div class="dot"></div>' + opts.map(([k, l, dx, dy]) => `<button data-s="${k}" class="${shading === k ? 'on' : ''}" style="left:${dx}px;top:${dy}px">${$(`#shadeSeg [data-shade="${k}"]`).innerHTML}${l}</button>`).join('');
+  pieEl.style.left = Math.max(150, Math.min(x, innerWidth - 150)) + 'px';
+  pieEl.style.top = Math.max(90, Math.min(y, innerHeight - 90)) + 'px';
+  document.body.appendChild(pieEl);
+  pieEl.addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (b) { setShading(b.dataset.s); closePie(); } });
+}
+function xMenu() {
+  if (!selected.size) { report('Ничего не выделено'); return; }
+  openMenu([{ l: 'Удалить', a: deleteSelected }], mouse.x - 30, mouse.y - 14, 'Удалить объекты?');
+}
+
+/* ================= TIMELINE ================= */
+let frame = 1, playing = false, acc = 0, lastApplied = -1;
+const tlC = $('#tlCanvas'), tlX = tlC.getContext('2d');
+const frameField = numField({ get: () => frame, set: v => { frame = Math.round(v); }, step: 0.4, min: 1, max: 250, fmt: v => String(Math.round(v)) });
+$('#frameFieldSlot').appendChild(frameField);
+const frameSync = liveSyncs.pop();
+function applyFrame() {
+  if (frame === lastApplied) return; lastApplied = frame;
+  const t = (frame - 1) / 249;
+  objects.forEach(o => o.userData.anim && o.userData.anim(o.userData.inner, t));
+  frameSync(); updateText(); drawTimeline();
+}
+function tlMap(w) { const L = 16, R = w - 16; return { L, R, x: f => L + (f - 1) / 249 * (R - L), f: x => Math.round(1 + (x - L) / (R - L) * 249) }; }
+function drawTimeline() {
+  const d = devicePixelRatio || 1, w = tlC.clientWidth, h = tlC.clientHeight;
+  if (!w) return;
+  if (tlC.width !== Math.round(w * d) || tlC.height !== Math.round(h * d)) { tlC.width = Math.round(w * d); tlC.height = Math.round(h * d); }
+  const x = tlX; x.setTransform(d, 0, 0, d, 0, 0);
+  x.fillStyle = '#2b2b2b'; x.fillRect(0, 0, w, h);
+  x.fillStyle = '#232323'; x.fillRect(0, 0, w, 22);
+  const M = tlMap(w);
+  const step = w < 500 ? 50 : w < 900 ? 20 : 10;
+  x.font = '11px Inter, sans-serif'; x.textAlign = 'center';
+  for (let f = 0; f <= 250; f += step / 2) {
+    if (f < 1 && f !== 0) continue;
+    const px = Math.round(M.x(Math.max(1, f))) + 0.5, major = f % step === 0;
+    x.strokeStyle = major ? '#3a3a3a' : '#313131'; x.beginPath(); x.moveTo(px, 22); x.lineTo(px, h); x.stroke();
+    if (major) { x.fillStyle = '#9a9a9a'; x.fillText(String(Math.max(1, f)), px, 15); }
+  }
+  // keyframes summary row
+  x.fillStyle = '#323232'; x.fillRect(0, 34, w, 20);
+  const animated = [...selected].some(o => o.userData.anim);
+  const keys = animated ? [1, 63, 125, 188, 250] : [];
+  keys.forEach(f => {
+    x.save(); x.translate(M.x(f), 44); x.rotate(Math.PI / 4);
+    x.fillStyle = '#ffa033'; x.strokeStyle = '#000'; x.lineWidth = 1;
+    x.fillRect(-4, -4, 8, 8); x.strokeRect(-4, -4, 8, 8); x.restore();
+  });
+  if (!animated) { x.fillStyle = '#6f6f6f'; x.textAlign = 'center'; x.fillText(selected.size ? 'У выделенного нет ключевых кадров' : 'Выделите модель — увидите её ключевые кадры', w / 2, 76); }
+  // playhead
+  const px = Math.round(M.x(frame)) + 0.5;
+  x.strokeStyle = '#4772b3'; x.lineWidth = 2; x.beginPath(); x.moveTo(px, 20); x.lineTo(px, h); x.stroke(); x.lineWidth = 1;
+  x.fillStyle = '#4772b3'; roundRect(x, px - 16, 3, 32, 17, 4); x.fill();
+  x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = '600 11px Inter, sans-serif'; x.fillText(String(frame), px, 15.5);
+}
+function roundRect(x, a, b, w, h, r) { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); }
+let scrub = false;
+const scrubTo = e => { const r = tlC.getBoundingClientRect(); frame = Math.min(250, Math.max(1, tlMap(r.width).f(e.clientX - r.left))); };
+tlC.addEventListener('pointerdown', e => { scrub = true; tlC.setPointerCapture(e.pointerId); scrubTo(e); });
+tlC.addEventListener('pointermove', e => { if (scrub) scrubTo(e); });
+tlC.addEventListener('pointerup', () => scrub = false);
+function togglePlay(force) {
+  playing = force ?? !playing;
+  $('#tlPlay').classList.toggle('on', playing);
+  $('#tlPlay').innerHTML = playing ? '<svg viewBox="0 0 12 12"><path d="M2.5 1.5h2.5v9H2.5zM7 1.5h2.5v9H7z" fill="#fff"/></svg>' : '<svg viewBox="0 0 12 12"><path d="M3 1.5 10.5 6 3 10.5z" fill="#ddd"/></svg>';
+}
+$('#tlPlay').onclick = () => togglePlay();
+$('#tlStart').onclick = () => { frame = 1; };
+$('#tlEnd').onclick = () => { frame = 250; };
+
+/* ================= RENDER (F12) ================= */
+function renderStill(w, h) {
+  const prev = shading;
+  setShading('rendered', true);
+  const hide = [grid, axes, cursor3d, tcHelper, ...overlays, ...objects.filter(o => o.userData.type !== 'mesh').map(o => o.userData.inner)];
+  const vis = hide.map(o => o.visible); hide.forEach(o => o.visible = false);
+  const rc = new THREE.PerspectiveCamera(36, w / h, 0.1, 500);
+  const c = live().find(o => o.userData.type === 'camera');
+  if (c) { c.updateMatrixWorld(); rc.position.copy(c.getWorldPosition(new V3())); rc.quaternion.copy(c.getWorldQuaternion(new THREE.Quaternion())); rc.rotateY(Math.PI); }
+  else { rc.position.copy(camera.position); rc.quaternion.copy(camera.quaternion); }
+  const size = renderer.getSize(new THREE.Vector2()), pr = renderer.getPixelRatio();
+  renderer.setPixelRatio(1); renderer.setSize(w, h, false);
+  renderer.render(scene, rc);
+  const url = renderer.domElement.toDataURL('image/png');
+  renderer.setPixelRatio(pr); renderer.setSize(size.x, size.y, false);
+  hide.forEach((o, i) => o.visible = vis[i]);
+  setShading(prev, true);
+  return url;
+}
+let rUrl = '', rAnim = 0;
+function openRender() {
+  closeMenu(); closePie();
+  const t0 = performance.now();
+  rUrl = renderStill(1280, 720);
+  const ms = performance.now() - t0;
+  $('#renderModal').classList.add('on');
+  const img = new Image();
+  img.onload = () => {
+    const c = $('#rCanvas'), x = c.getContext('2d'); c.width = 1280; c.height = 720;
+    const levels = [48, 24, 12, 6, 3, 1], start = performance.now(), dur = 1600;
+    const small = document.createElement('canvas'), sx = small.getContext('2d');
+    cancelAnimationFrame(rAnim);
+    const step = () => {
+      const k = Math.min(1, (performance.now() - start) / dur);
+      const lv = levels[Math.min(levels.length - 1, Math.floor(k * levels.length))];
+      small.width = Math.ceil(1280 / lv); small.height = Math.ceil(720 / lv);
+      sx.drawImage(img, 0, 0, small.width, small.height);
+      x.imageSmoothingEnabled = false; x.drawImage(small, 0, 0, 1280, 720);
+      $('#rSamples').textContent = `Сэмплы ${Math.round(k * 128)}/128`;
+      $('#rProg').style.width = (k * 100) + '%';
+      $('#rInfo').textContent = `Кадр: ${frame} | Время: 00:0${(dur / 1000 * k + ms / 1000).toFixed(2)} | 1280×720 | ${live().find(o => o.userData.type === 'camera') ? 'Камера' : 'Вид вьюпорта'}`;
+      if (k < 1) rAnim = requestAnimationFrame(step);
+    };
+    step();
+  };
+  img.src = rUrl;
+}
+function closeRender() { $('#renderModal').classList.remove('on'); cancelAnimationFrame(rAnim); }
+$('#rClose').onclick = closeRender;
+$('#renderModal').addEventListener('pointerdown', e => { if (e.target.id === 'renderModal') closeRender(); });
+$('#rSave').onclick = () => download(rUrl, 'blender-render.png');
+function download(url, name) { const a = document.createElement('a'); a.href = url; a.download = name; a.click(); }
+function saveViewport() { composer.render(); download(renderer.domElement.toDataURL('image/png'), 'viewport.png'); report('Скриншот сохранён'); }
+
+/* ================= WORKSPACES ================= */
+let ws = 'layout';
+function setWs(name) {
+  ws = name;
+  $$('.tab').forEach(t => t.classList.toggle('on', t.dataset.ws === name));
+  $$('.ws').forEach(s => s.classList.toggle('on', s.id === 'ws-' + name));
+  closeMenu();
+  if (name === 'layout') requestAnimationFrame(resize);
+}
+$$('.tab').forEach(t => t.addEventListener('click', () => setWs(t.dataset.ws)));
+
+/* ================= SPLASH ================= */
+function showSplash() { $('#splash').classList.add('on'); }
+function closeSplash() { $('#splash').classList.remove('on'); }
+$('#splash').addEventListener('pointerdown', e => { if (e.target.id === 'splash') closeSplash(); });
+$$('#splash [data-go]').forEach(a => a.addEventListener('click', () => {
+  closeSplash(); const g = a.dataset.go;
+  if (g === 'render') { setWs('layout'); setTimeout(openRender, 60); } else setWs(g);
+}));
+
+/* ================= KEYMAP PAGE ================= */
+const KEYS = [
+  ['Навигация', [
+    ['СКМ + тянуть', 'Вращать вид (на сайте — ЛКМ)', 1], ['Shift + СКМ', 'Сдвиг вида (на сайте — ПКМ)', 1], ['Колесо', 'Приблизить / отдалить', 1],
+    ['Numpad 1 / 3 / 7', 'Вид спереди / справа / сверху', 1], ['Ctrl + Numpad', 'Противоположный вид'], ['Numpad 0', 'Вид из камеры', 1],
+    ['Numpad .', 'Показать выделенное', 1], ['Home', 'Показать всё', 1], ['Numpad 5', 'Перспектива / ортография'], ['Ctrl Space', 'Развернуть область на весь экран'],
+  ]],
+  ['Выделение', [
+    ['ЛКМ', 'Выделить объект', 1], ['Shift + ЛКМ', 'Добавить к выделению', 1], ['A', 'Выделить всё', 1], ['Alt A', 'Снять выделение', 1],
+    ['Ctrl I', 'Инвертировать выделение', 1], ['B', 'Выделение рамкой'], ['C', 'Выделение кистью-кругом'],
+  ]],
+  ['Объекты', [
+    ['Shift A', 'Меню «Добавить»', 1], ['X / Delete', 'Удалить', 1], ['G', 'Переместить (Grab)', 1], ['R', 'Вращать', 1], ['S', 'Масштабировать', 1],
+    ['G, затем X / Y / Z', 'Двигать вдоль оси'], ['Shift D', 'Дублировать'], ['Alt D', 'Связанный дубликат'], ['Ctrl J', 'Объединить объекты'],
+    ['H / Alt H', 'Скрыть / показать скрытое', 1], ['M', 'Переместить в коллекцию'], ['Ctrl A', 'Применить трансформацию'], ['Ctrl Z', 'Отменить', 1], ['Ctrl Shift Z', 'Повторить'],
+  ]],
+  ['Режим правки', [
+    ['Tab', 'Объектный режим ⇄ режим правки', 1], ['1 / 2 / 3', 'Вершины / рёбра / грани'], ['E', 'Выдавить (Extrude)'], ['I', 'Вставить грань (Inset)'],
+    ['Ctrl R', 'Петлевой разрез (Loop Cut)'], ['Ctrl B', 'Фаска (Bevel)'], ['K', 'Нож (Knife)'], ['Alt + ЛКМ', 'Выделить петлю рёбер'], ['M', 'Слить вершины (Merge)'], ['F', 'Создать грань'], ['P', 'Отделить в новый объект'],
+  ]],
+  ['Вид и затенение', [
+    ['Z', 'Круговое меню затенения', 1], ['Shift Z', 'Каркас вкл/выкл'], ['Alt Z', 'Рентген (X-Ray)'], ['N', 'Боковая панель'], ['T', 'Панель инструментов'],
+  ]],
+  ['Анимация и рендер', [
+    ['Пробел', 'Воспроизвести / пауза', 1], ['I', 'Вставить ключевой кадр'], ['← / →', 'Предыдущий / следующий кадр'], ['Shift ←', 'В начало'],
+    ['F12', 'Рендер изображения', 1], ['Ctrl F12', 'Рендер анимации'], ['F11', 'Показать окно рендера'],
+  ]],
+];
+function renderKeys(q = '') {
+  q = q.trim().toLowerCase(); let n = 0, h = '';
+  KEYS.forEach(([cat, rows]) => {
+    const f = rows.filter(r => !q || (r[0] + ' ' + r[1] + ' ' + cat).toLowerCase().includes(q));
+    if (!f.length) return; n += f.length;
+    h += `<details class="panel" open><summary>${cat}</summary><div class="pb"><table class="keys">` +
+      f.map(([k, d, ok]) => `<tr><td>${k.split(' / ').map(p => `<span class="kc">${esc(p)}</span>`).join(' / ')}</td><td>${d}</td><td>${ok ? '<span class="ok">✓ работает тут</span>' : ''}</td></tr>`).join('') + '</table></div></details>';
+  });
+  $('#keyTables').innerHTML = h || '<p class="muted">Ничего не найдено.</p>';
+  $('#keyCount').textContent = `${n} сочетаний`;
+}
+$('#keySearch').addEventListener('input', e => renderKeys(e.target.value));
+renderKeys();
+
+/* ================= KEYBOARD ================= */
+addEventListener('keydown', e => {
+  if (e.target.matches('input,textarea,select')) return;
+  const k = e.key.toLowerCase(), c = e.code;
+  if (k === 'escape') {
+    if (menuEl || pieEl) { closeMenu(); closePie(); return; }
+    if ($('#renderModal').classList.contains('on')) return closeRender();
+    if ($('#splash').classList.contains('on')) return closeSplash();
+    return setTool('select');
+  }
+  if ($('#splash').classList.contains('on')) closeSplash();
+  if (ws !== 'layout') return;
+  if (k === 'f12') { e.preventDefault(); return openRender(); }
+  if ($('#renderModal').classList.contains('on')) return;
+  if (e.ctrlKey && k === 'z') { e.preventDefault(); return undo(); }
+  if (e.ctrlKey && k === 'i') { e.preventDefault(); return invertSel(); }
+  if (e.ctrlKey || e.metaKey) return;
+  const numpad = c.startsWith('Numpad');
+  let handled = true;
+  if (c === 'Space') togglePlay();
+  else if (k === 'tab') toggleEdit();
+  else if (k === 'delete') deleteSelected();
+  else if (k === 'x' || c === 'KeyX') xMenu();
+  else if ((k === 'a' || c === 'KeyA') && e.shiftKey) openMenu(MENUS.add, mouse.x, mouse.y, 'Добавить');
+  else if ((k === 'a' || c === 'KeyA') && e.altKey) select(null);
+  else if (k === 'a' || c === 'KeyA') selectAll();
+  else if ((k === 'h' || c === 'KeyH') && e.altKey) unhideAll();
+  else if (k === 'h' || c === 'KeyH') hideSelected();
+  else if (c === 'KeyG') setTool('translate');
+  else if (c === 'KeyR') setTool('rotate');
+  else if (c === 'KeyS') setTool('scale');
+  else if (c === 'KeyZ') openPie(mouse.x, mouse.y);
+  else if (c === 'NumpadDecimal' || k === '.' || k === ',') frameObjects([...selected]);
+  else if (k === 'home') frameObjects(live());
+  else if (c === 'Numpad0' || (!numpad && k === '0')) cameraView();
+  else if (c === 'Numpad1' || (!numpad && k === '1')) setView(new V3(0, 0, e.ctrlKey ? -1 : 1), 'Вид спереди');
+  else if (c === 'Numpad3' || (!numpad && k === '3')) setView(new V3(1, 0, 0), 'Вид справа');
+  else if (c === 'Numpad7' || (!numpad && k === '7')) setView(new V3(0, 1, 0.0001), 'Вид сверху');
+  else if (k === 'arrowright') frame = Math.min(250, frame + 1);
+  else if (k === 'arrowleft') frame = e.shiftKey ? 1 : Math.max(1, frame - 1);
+  else handled = false;
+  if (handled) e.preventDefault();
+});
+
+/* ================= LOOP ================= */
+function resize() {
+  const w = vp.clientWidth, h = vp.clientHeight; if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(w, h);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+  drawTimeline();
+}
+new ResizeObserver(resize).observe(vp);
+new ResizeObserver(drawTimeline).observe(tlC);
+
+const clock = new THREE.Clock();
+function tick() {
+  const dt = Math.min(clock.getDelta(), 0.1);
+  if (playing) { acc += dt; while (acc >= 1 / 24) { acc -= 1 / 24; frame = frame >= 250 ? 1 : frame + 1; } }
+  applyFrame();
+  if (tween) {
+    let k = Math.min(1, (performance.now() - tween.s) / tween.d); const e2 = 1 - Math.pow(1 - k, 3);
+    camera.position.lerpVectors(tween.p0, tween.p1, e2); controls.target.lerpVectors(tween.t0, tween.t1, e2);
+    if (k >= 1) tween = null;
+  }
+  controls.update();
+  if (ws === 'layout') { updateGizmo(); composer.render(); }
+  requestAnimationFrame(tick);
+}
+
+/* ================= START ================= */
+buildScene();
+setShading('solid', true);
+resize();
+const cube = objects.find(o => o.userData.name === 'Куб');
+selected.add(cube); active = cube;
+refresh();
+const still = renderStill(1280, 720);
+$('#splashImg').style.backgroundImage = `url(${still})`;
+$('#heroImg').style.backgroundImage = `url(${still})`;
+if (TEST) {
+  const p = new URLSearchParams(location.search);
+  if (p.get('ws')) setWs(p.get('ws'));
+  if (p.get('shade')) setShading(p.get('shade'), true);
+  if (p.get('splash')) showSplash();
+  if (p.get('edit')) toggleEdit();
+} else showSplash();
+tick();
+</script>
+</body>
+</html>
