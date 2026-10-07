@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blender: плюсы и минусы</title>
+<meta name="description" content="Честный обзор Blender: плюсы, минусы, сравнение с Maya, 3ds Max и Cinema 4D и итоговая оценка.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0f12; --bg2:#121418; --card:#171a1f; --card2:#1c2026; --line:#262a31;
+  --text:#eef0f4; --dim:#9aa1ad; --orange:#ff9a3c; --orange2:#ffb86b; --blue:#4c8dff;
+  --plus:#3fd47e; --plus2:#1f6b43; --minus:#ff5b6b; --minus2:#7a2630;
+  --r:18px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Inter,system-ui,sans-serif;overflow-x:hidden}
+a{color:inherit}
+h1,h2,h3{font-family:Unbounded,Inter,sans-serif;letter-spacing:-.02em;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+.plus-c{color:var(--plus)} .minus-c{color:var(--minus)} .or{color:var(--orange)}
+
+/* progress + nav */
+.progress{position:fixed;left:0;top:0;height:3px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--plus),var(--orange),var(--minus));z-index:60}
+nav{position:fixed;top:0;left:0;right:0;z-index:50;transition:background .3s,backdrop-filter .3s}
+nav.solid{background:#0e0f12cc;backdrop-filter:blur(12px);border-bottom:1px solid #ffffff0d}
+nav .wrap{display:flex;align-items:center;height:64px;gap:24px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;text-decoration:none}
+.brand svg{width:28px;height:28px}
+.links{display:flex;gap:6px;margin-left:auto}
+.links a{text-decoration:none;color:var(--dim);padding:7px 12px;border-radius:99px;font-size:14px;transition:.2s}
+.links a:hover,.links a.on{color:var(--text);background:#ffffff10}
+
+/* hero */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:96px 0 60px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:-20%;background:radial-gradient(40% 40% at 72% 45%,#ff9a3c22,transparent 70%),radial-gradient(35% 35% at 20% 80%,#4c8dff1a,transparent 70%);pointer-events:none}
+.hero .wrap{position:relative;display:grid;grid-template-columns:1.05fr 1fr;gap:20px;align-items:center;width:100%}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--dim);border:1px solid var(--line);border-radius:99px;padding:5px 12px 5px 8px;margin-bottom:22px}
+.kicker i{width:8px;height:8px;border-radius:50%;background:var(--plus);box-shadow:0 0 0 0 var(--plus);animation:ping 2s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 #3fd47e88}100%{box-shadow:0 0 0 10px #3fd47e00}}
+.hero h1{font-size:clamp(40px,6.2vw,78px);line-height:1.02;font-weight:800}
+.hero h1 .w{display:inline-block;opacity:0;transform:translateY(40px) rotate(4deg);animation:up .9s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:var(--d)}
+@keyframes up{to{opacity:1;transform:none}}
+.hero h1 .plus-c,.hero h1 .minus-c{position:relative}
+.hero h1 .plus-c::after,.hero h1 .minus-c::after{content:"";position:absolute;left:0;right:0;bottom:.02em;height:.09em;border-radius:9px;background:currentColor;transform:scaleX(0);transform-origin:left;animation:line .7s .9s forwards}
+.hero h1 .minus-c::after{animation-delay:1.15s}
+@keyframes line{to{transform:scaleX(1)}}
+.lead{font-size:18px;color:#c4c9d2;max-width:540px;margin:22px 0 30px;opacity:0;animation:up .9s .5s forwards}
+.cta{display:flex;gap:12px;flex-wrap:wrap;opacity:0;animation:up .9s .65s forwards}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:99px;text-decoration:none;font-weight:600;font-size:15px;transition:transform .2s,background .2s,box-shadow .2s}
+.btn.main{background:var(--orange);color:#1a1006;box-shadow:0 8px 30px #ff9a3c44}
+.btn.main:hover{transform:translateY(-2px);box-shadow:0 12px 36px #ff9a3c66}
+.btn.ghost{border:1px solid var(--line);color:var(--text)}
+.btn.ghost:hover{background:#ffffff0d}
+.stats{display:flex;gap:30px;margin-top:44px;flex-wrap:wrap;opacity:0;animation:up .9s .8s forwards}
+.stat b{display:block;font:700 30px Unbounded,sans-serif;letter-spacing:-.02em}
+.stat>span{font-size:13px;color:var(--dim)}
+.stage{position:relative;height:min(620px,72vh)}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%}
+.chip{position:absolute;padding:9px 14px;border-radius:14px;font-size:14px;font-weight:600;backdrop-filter:blur(8px);white-space:nowrap;animation:bob 5s ease-in-out infinite;animation-delay:var(--d);pointer-events:none}
+.chip.p{background:#13281bcc;border:1px solid #3fd47e55;color:#9ff0c1}
+.chip.m{background:#2a1418cc;border:1px solid #ff5b6b55;color:#ffb3bb}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.scroll-hint{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:24px;height:38px;border:2px solid #ffffff40;border-radius:14px}
+.scroll-hint::after{content:"";position:absolute;left:50%;top:7px;width:4px;height:8px;margin-left:-2px;border-radius:2px;background:#fff;animation:wheel 1.6s infinite}
+@keyframes wheel{0%{opacity:0;transform:translateY(0)}30%{opacity:1}100%{opacity:0;transform:translateY(12px)}}
+
+/* marquee */
+.marquee{border-block:1px solid var(--line);background:var(--bg2);overflow:hidden;padding:16px 0}
+.mq{display:flex;gap:40px;width:max-content;animation:mq 40s linear infinite;font:600 18px Unbounded,sans-serif;color:#5d6470;white-space:nowrap}
+.mq span::before{content:"✦";color:var(--orange);margin-right:40px}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+/* sections */
+section{padding:110px 0}
+.sec-head{max-width:720px;margin-bottom:48px}
+.tag{display:inline-block;font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;padding:4px 10px;border-radius:8px}
+.tag.p{background:#3fd47e1a;color:var(--plus)} .tag.m{background:#ff5b6b1a;color:var(--minus)} .tag.o{background:#ff9a3c1a;color:var(--orange)}
+.sec-head h2{font-size:clamp(30px,4.2vw,50px);line-height:1.1;font-weight:700}
+.sec-head p{color:var(--dim);font-size:17px;margin:16px 0 0}
+.rv{opacity:0;transform:translateY(36px);transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d,0s)}
+.rv.in{opacity:1;transform:none}
+
+/* scale */
+.scale-box{display:grid;grid-template-columns:1fr 1.25fr;gap:40px;align-items:center}
+.scale-svg{width:100%;height:auto;overflow:visible}
+.weight{animation:drop .55s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes drop{from{transform:translateY(-140px);opacity:0}to{transform:none;opacity:1}}
+.legend{display:flex;gap:16px;margin-top:22px;flex-wrap:wrap}
+.legend div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;flex:1;min-width:140px}
+.legend b{font:700 34px Unbounded,sans-serif}
+.legend span{display:block;color:var(--dim);font-size:14px}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:26px 24px 24px;overflow:hidden;transition:transform .35s,border-color .35s,box-shadow .35s;transform-style:preserve-3d}
+.card::before{content:"";position:absolute;inset:0;background:radial-gradient(260px circle at var(--mx,50%) var(--my,0%),var(--glow),transparent 70%);opacity:0;transition:opacity .3s;pointer-events:none}
+.card:hover::before{opacity:1}
+.pro{--glow:#3fd47e1c;--acc:var(--plus)}
+.con{--glow:#ff5b6b1c;--acc:var(--minus)}
+.card:hover{border-color:color-mix(in srgb,var(--acc) 45%,transparent);box-shadow:0 20px 50px #0007}
+.card .num{position:absolute;right:20px;top:18px;font:700 14px Unbounded,sans-serif;color:var(--acc);opacity:.7}
+.card .ic{width:64px;height:64px;border-radius:16px;display:grid;place-items:center;background:color-mix(in srgb,var(--acc) 12%,transparent);margin-bottom:18px}
+.card .ic svg{width:44px;height:44px;overflow:visible}
+.card h3{font-size:19px;font-weight:700;line-height:1.25;margin-bottom:10px}
+.card p{margin:0;color:#b3b9c3;font-size:15px}
+.card .note{display:inline-block;margin-top:14px;font-size:13px;color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,transparent);padding:3px 10px;border-radius:99px}
+
+/* icon animations */
+.spinY{transform-box:fill-box;transform-origin:center;animation:spinY 3s ease-in-out infinite}
+@keyframes spinY{0%,40%{transform:scaleX(1)}50%{transform:scaleX(.05)}60%,100%{transform:scaleX(1)}}
+.orbit{transform-origin:24px 24px;animation:rot 4s linear infinite}
+.orbit.r{animation-duration:6s;animation-direction:reverse}
+@keyframes rot{to{transform:rotate(360deg)}}
+.blink{animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.pulse{transform-box:fill-box;transform-origin:center;animation:pulse 2.2s ease-out infinite}
+@keyframes pulse{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.6);opacity:0}}
+.float{animation:float 2.6s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(2px)}50%{transform:translateY(-4px)}}
+.shine{animation:shine 2.8s ease-in-out infinite}
+@keyframes shine{0%{transform:translateX(-30px)}60%,100%{transform:translateX(30px)}}
+.flow{stroke-dasharray:4 4;animation:flow .8s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-8}}
+.snap{animation:snap 2.4s cubic-bezier(.5,0,.2,1.4) infinite}
+@keyframes snap{0%,20%{transform:translateX(9px)}45%,85%{transform:none}100%{transform:translateX(9px)}}
+.climb{animation:climb 3.2s ease-in infinite}
+@keyframes climb{0%{transform:translate(0,0)}60%{transform:translate(14px,-16px)}70%{transform:translate(15px,-17px)}100%{transform:translate(0,0)}}
+.win{animation:win 3s steps(1) infinite;animation-delay:var(--d)}
+@keyframes win{0%,100%{opacity:1}50%{opacity:.15}}
+.therm{transform-box:fill-box;transform-origin:bottom;animation:therm 2.6s ease-in-out infinite}
+@keyframes therm{0%,100%{transform:scaleY(.3)}60%{transform:scaleY(1)}}
+.shuffle1{animation:sh1 3s ease-in-out infinite}.shuffle2{animation:sh2 3s ease-in-out infinite}
+@keyframes sh1{0%,30%{transform:none}50%,80%{transform:translate(14px,14px)}100%{transform:none}}
+@keyframes sh2{0%,30%{transform:none}50%,80%{transform:translate(-14px,-14px)}100%{transform:none}}
+.wob{transform-box:fill-box;transform-origin:center bottom;animation:wob 2s ease-in-out infinite}
+@keyframes wob{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.gear{transform-box:fill-box;transform-origin:center;animation:rot 6s linear infinite}
+
+/* compare */
+.tbl-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--line);background:var(--card)}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{padding:16px 18px;text-align:left;border-bottom:1px solid var(--line);font-size:15px}
+th{font-family:Unbounded,sans-serif;font-weight:600;font-size:14px;color:var(--dim)}
+tr:last-child td{border-bottom:0}
+td:first-child{color:var(--dim);width:22%}
+.col-b{background:#ff9a3c0d;color:#fff}
+th.col-b{color:var(--orange)}
+tbody tr{opacity:0;transform:translateX(-20px);transition:.6s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d)}
+.tbl-wrap.in tbody tr{opacity:1;transform:none}
+.dots{letter-spacing:2px;color:var(--orange)}
+.dots i{font-style:normal;color:#3a3f48}
+.small{font-size:13px;color:var(--dim);margin-top:12px}
+
+/* who */
+.who{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.who-col{border-radius:var(--r);padding:30px;border:1px solid var(--line);background:var(--card)}
+.who-col h3{font-size:22px;margin-bottom:18px}
+.who-col ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.who-col li{display:flex;gap:12px;align-items:flex-start;color:#c9ced6;opacity:0;transform:translateX(-14px);transition:.5s;transition-delay:var(--d)}
+.who-col.in li{opacity:1;transform:none}
+.who-col li b{flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:15px}
+.who-col.yes li b{background:#3fd47e22;color:var(--plus)}
+.who-col.no li b{background:#ff5b6b22;color:var(--minus)}
+
+/* verdict */
+.verdict{display:grid;grid-template-columns:1fr 340px;gap:40px;align-items:center}
+.bars{display:grid;gap:18px}
+.bar-top{display:flex;justify-content:space-between;margin-bottom:8px;font-weight:500}
+.bar-top span:last-child{font-family:Unbounded,sans-serif;font-size:14px}
+.bar{height:10px;border-radius:99px;background:#22262d;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--c1),var(--c2));transition:width 1.4s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d)}
+.ring-box{position:relative;aspect-ratio:1;max-width:340px;width:100%;margin:0 auto}
+.ring-box svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-box .val{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ring-box .val b{display:block;font:800 72px/1 Unbounded,sans-serif}
+.ring-box .val span{color:var(--dim);font-size:15px}
+.final{margin-top:60px;border-radius:24px;padding:44px;background:linear-gradient(135deg,#1c1f25,#16181c);border:1px solid var(--line);position:relative;overflow:hidden}
+.final::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(#ff9a3c44,transparent 70%);animation:breathe 6s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.25)}}
+.final h3{font-size:clamp(22px,3vw,32px);line-height:1.25;max-width:760px;position:relative;z-index:1}
+.final p{color:#c4c9d2;max-width:720px;position:relative;z-index:1}
+footer{padding:40px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid var(--line)}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+
+/* ---------- pipeline: donut built by scroll ---------- */
+#pipe{position:relative;height:720vh;padding:0}
+.pipe-sticky{position:sticky;top:0;height:100vh;overflow:hidden}
+.pipe-bg{position:absolute;inset:0;background:radial-gradient(45% 55% at 66% 52%,var(--pbg,#ff9a3c10),transparent 72%);transition:background .8s}
+.pipe-cv{position:absolute;right:0;top:0;width:64%;height:100%}
+.pipe-cv canvas{width:100%;height:100%;display:block}
+.pipe-left{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:center;width:min(440px,40%);margin-left:max(20px,calc((100vw - 1180px)/2 + 20px))}
+.pipe-left h2{font-size:clamp(26px,3vw,38px);line-height:1.12;margin:0 0 26px}
+.psteps{list-style:none;margin:0;padding:0 0 0 22px;position:relative}
+.psteps::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:3px;background:#262a31}
+.prail{position:absolute;left:0;top:6px;width:3px;border-radius:3px;background:linear-gradient(var(--plus),var(--orange));height:0}
+.ps{display:flex;gap:14px;padding:7px 0;opacity:.32;transition:opacity .4s}
+.ps.on{opacity:1}
+.ps .pn{font:700 13px Unbounded,sans-serif;color:var(--orange);padding-top:4px;width:24px;flex:none}
+.ps h4{margin:0;font:600 18px/1.3 Unbounded,sans-serif}
+.ps .pd{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s}
+.ps.on .pd{grid-template-rows:1fr}
+.ps .pd>div{overflow:hidden}
+.ps p{margin:8px 0 8px;color:#bcc2cc;font-size:15px}
+.kbd{display:inline-block;font-size:12.5px;font-weight:600;background:#22262d;border:1px solid #333944;border-bottom-width:3px;border-radius:7px;padding:2px 9px;color:#e6e8ec}
+.hud{position:absolute;inset:7% 6% 9% 6%;pointer-events:none;font:500 12.5px Inter,sans-serif;color:#cfd3da}
+.hud::before,.hud::after,.hud i::before,.hud i::after{content:"";position:absolute;width:22px;height:22px;border:2px solid #ffffff40}
+.hud::before{left:0;top:0;border-right:0;border-bottom:0}.hud::after{right:0;top:0;border-left:0;border-bottom:0}
+.hud i::before{left:0;bottom:0;border-right:0;border-top:0}.hud i::after{right:0;bottom:0;border-left:0;border-top:0}
+.hud .tl{position:absolute;left:30px;top:6px;line-height:1.6}
+.hud .tl b{color:#fff}
+.hud .br{position:absolute;right:30px;bottom:6px;text-align:right;line-height:1.6}
+.hud .mode{display:inline-block;padding:2px 9px;border-radius:6px;background:#4772b3;color:#fff;font-weight:600}
+.rbar{display:inline-block;width:90px;height:5px;border-radius:3px;background:#ffffff1f;vertical-align:middle;overflow:hidden;margin-left:6px}
+.rbar u{display:block;height:100%;width:0;background:var(--orange)}
+
+/* ---------- swipe game ---------- */
+.game{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center}
+.deck{position:relative;height:380px;max-width:400px;width:100%;margin:0 auto}
+.gcard{position:absolute;inset:0;border-radius:26px;background:linear-gradient(160deg,#21252c,#15181d);border:1px solid #2c3139;padding:34px 30px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 24px 60px #0009;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;transition:transform .5s cubic-bezier(.2,.8,.2,1),opacity .5s}
+.gcard.drag{transition:none;cursor:grabbing}
+.gcard .gn{position:absolute;top:22px;left:50%;transform:translateX(-50%);font-size:13px;color:var(--dim)}
+.gcard .q{font:700 clamp(19px,2.2vw,24px)/1.3 Unbounded,sans-serif;text-align:center}
+.gcard .hint{margin-top:22px;text-align:center;color:var(--dim);font-size:13px}
+.stamp{position:absolute;top:56px;padding:4px 12px;border:3px solid;border-radius:10px;font:800 20px Unbounded,sans-serif;opacity:0}
+.stamp.p{left:22px;color:var(--plus);transform:rotate(-14deg)}
+.stamp.m{right:22px;color:var(--minus);transform:rotate(14deg)}
+.gbtns{display:flex;gap:14px;justify-content:center;margin-top:28px}
+.gbtn{border:0;cursor:pointer;font:700 15px Inter,sans-serif;padding:14px 24px;border-radius:99px;transition:transform .15s}
+.gbtn:active{transform:scale(.95)}
+.gbtn.m{background:#ff5b6b22;color:var(--minus);border:1px solid #ff5b6b55}
+.gbtn.p{background:#3fd47e22;color:var(--plus);border:1px solid #3fd47e55}
+.gfb{min-height:72px;margin-top:20px;text-align:center;font-size:15px;color:#c4c9d2;max-width:420px;margin-inline:auto}
+.gfb b.ok{color:var(--plus)} .gfb b.no{color:var(--minus)}
+.gscore{display:flex;gap:10px;margin-top:24px}
+.gscore div{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.gscore b{display:block;font:700 28px Unbounded,sans-serif}
+.gscore span{color:var(--dim);font-size:13px}
+.gres{text-align:center;cursor:default}
+.gres .big{font:800 64px/1 Unbounded,sans-serif;background:linear-gradient(90deg,var(--plus),var(--orange));-webkit-background-clip:text;background-clip:text;color:transparent}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:70}
+
+/* ---------- 3D cursor + toast ---------- */
+#cur{position:fixed;left:0;top:0;width:34px;height:34px;margin:-17px 0 0 -17px;pointer-events:none;z-index:100;transition:width .2s,height .2s,margin .2s;display:none}
+#cur .ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(#ff3b3b 0 45deg,#fff 0 90deg,#ff3b3b 0 135deg,#fff 0 180deg,#ff3b3b 0 225deg,#fff 0 270deg,#ff3b3b 0 315deg,#fff 0);-webkit-mask:radial-gradient(circle,transparent 58%,#000 61%);mask:radial-gradient(circle,transparent 58%,#000 61%);animation:rot 6s linear infinite}
+#cur::before,#cur::after{content:"";position:absolute;background:#000a;left:50%;top:50%}
+#cur::before{width:2px;height:46%;transform:translate(-50%,-50%)}
+#cur::after{height:2px;width:46%;transform:translate(-50%,-50%)}
+#cur.big{width:56px;height:56px;margin:-28px 0 0 -28px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,120px);background:#1d2026f2;border:1px solid #333944;border-radius:14px;padding:12px 18px;z-index:80;font-size:15px;box-shadow:0 14px 40px #000a;transition:transform .45s cubic-bezier(.2,1.3,.4,1);max-width:calc(100vw - 32px)}
+.toast.on{transform:translate(-50%,0)}
+.egg{margin-top:18px;font-size:13px;color:#6f7682;opacity:0;animation:up .9s 1.1s forwards}
+
+@media (max-width:960px){
+  .hero .wrap,.scale-box,.verdict,.who,.game{grid-template-columns:1fr}
+  .pipe-cv{width:100%;height:56%;top:auto;bottom:0}
+  .pipe-left{width:auto;margin:0 20px;justify-content:flex-start;padding-top:78px}
+  .pipe-left h2{font-size:22px;margin-bottom:14px}
+  .ps{padding:4px 0}.ps h4{font-size:15px}.ps p{font-size:14px;margin:4px 0}
+  .ps:not(.on){display:none}
+  .hud{inset:4% 4% 6% 4%;font-size:11px}
+  .stage{height:420px;order:-1;margin-top:-10px}
+  .cards{grid-template-columns:1fr 1fr}
+  .links{display:none}
+}
+@media (max-width:620px){
+  .cards{grid-template-columns:1fr}
+  section{padding:80px 0}
+  .stage{height:330px}
+  .chip{font-size:12px;padding:6px 10px}
+  .stats{gap:22px}
+  .final{padding:28px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .rv,.hero h1 .w,.lead,.cta,.stats,tbody tr,.who-col li{opacity:1!important;transform:none!important}
+}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div id="cur"><div class="ring"></div></div>
+<div class="toast" id="toast"></div>
+<canvas id="confetti"></canvas>
+
+<nav id="nav"><div class="wrap">
+  <a class="brand" href="#top">
+    <svg viewBox="0 0 24 24"><path d="M12 2.5l8.5 4.8v9.4L12 21.5l-8.5-4.8V7.3z" fill="#ff9a3c"/><path d="M12 2.5l8.5 4.8L12 12 3.5 7.3z" fill="#ffc98f"/><path d="M12 12v9.5l8.5-4.8V7.3z" fill="#d9761a"/></svg>
+    Blender: за и против
+  </a>
+  <div class="links">
+    <a href="#scale">Весы</a><a href="#plus">Плюсы</a><a href="#pipe">Пончик</a><a href="#minus">Минусы</a><a href="#game">Игра</a><a href="#verdict">Вердикт</a>
+  </div>
+</div></nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <div class="kicker"><i></i>Честный обзор · 2026</div>
+      <h1>
+        <span class="w" style="--d:.05s">Blender:</span><br>
+        <span class="w plus-c" style="--d:.2s">плюсы</span>
+        <span class="w" style="--d:.3s">и</span><br>
+        <span class="w minus-c" style="--d:.4s">минусы</span>
+      </h1>
+      <p class="lead">Бесплатная 3D-программа, в которой делают мультфильмы, игры и рекламу. Разбираемся, за что её любят, где она подводит и стоит ли тратить на неё время.</p>
+      <div class="cta">
+        <a class="btn main" href="#scale">Что перевешивает? ↓</a>
+        <a class="btn ghost" href="#verdict">Сразу к вердикту</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><b><span data-count="0">0</span> ₽</b><span>стоимость</span></div>
+        <div class="stat"><b class="plus-c">+<span data-count="9">0</span></b><span>плюсов</span></div>
+        <div class="stat"><b class="minus-c">−<span data-count="6">0</span></b><span>минусов</span></div>
+        <div class="stat"><b><span data-count="32">0</span> года</b><span>развития</span></div>
+      </div>
+      <div class="egg">🥚 Пасхалка: нажмите <span class="kbd">X</span> или кликните по оранжевому кубу</div>
+    </div>
+    <div class="stage" id="stage">
+      <div class="chip p" style="left:4%;top:12%;--d:0s">+ Бесплатно навсегда</div>
+      <div class="chip m" style="right:2%;top:24%;--d:-1.5s">− Сложно начать</div>
+      <div class="chip p" style="right:8%;bottom:16%;--d:-3s">+ Всё в одной программе</div>
+      <div class="chip m" style="left:2%;bottom:24%;--d:-2.2s">− Не стандарт студий</div>
+    </div>
+  </div>
+  <div class="scroll-hint"></div>
+</header>
+
+<div class="marquee"><div class="mq">
+  <span>Моделирование</span><span>Скульптинг</span><span>Анимация</span><span>Cycles</span><span>EEVEE</span><span>Geometry Nodes</span><span>Grease Pencil</span><span>Симуляции</span><span>Монтаж</span><span>Python</span>
+  <span>Моделирование</span><span>Скульптинг</span><span>Анимация</span><span>Cycles</span><span>EEVEE</span><span>Geometry Nodes</span><span>Grease Pencil</span><span>Симуляции</span><span>Монтаж</span><span>Python</span>
+</div></div>
+
+<!-- SCALE -->
+<section id="scale"><div class="wrap scale-box">
+  <div class="rv">
+    <span class="tag o">Взвешиваем</span>
+    <div class="sec-head" style="margin-bottom:0">
+      <h2>Что перевешивает: плюсы или минусы?</h2>
+      <p>Каждый аргумент — это гирька. Пролистайте сюда, и весы покажут результат.</p>
+    </div>
+    <div class="legend">
+      <div><b class="plus-c" id="lgP">0</b><span>плюсов на весах</span></div>
+      <div><b class="minus-c" id="lgM">0</b><span>минусов на весах</span></div>
+    </div>
+  </div>
+  <svg class="scale-svg rv" id="scaleSvg" viewBox="0 0 640 420" style="--d:.15s">
+    <defs>
+      <linearGradient id="gBeam" x1="0" x2="1"><stop offset="0" stop-color="#3fd47e"/><stop offset=".5" stop-color="#ff9a3c"/><stop offset="1" stop-color="#ff5b6b"/></linearGradient>
+    </defs>
+    <ellipse cx="320" cy="400" rx="130" ry="12" fill="#000" opacity=".35"/>
+    <path d="M250 398h140l-20-24h-100z" fill="#2a2f37"/>
+    <rect x="312" y="96" width="16" height="282" rx="6" fill="#2f353e"/>
+    <g id="beam"><rect x="90" y="88" width="460" height="14" rx="7" fill="url(#gBeam)"/></g>
+    <circle cx="320" cy="95" r="15" fill="#ff9a3c"/><circle cx="320" cy="95" r="6" fill="#1a1006"/>
+    <g id="panL">
+      <path d="M0 0L-62 120M0 0L62 120" stroke="#5a616c" stroke-width="2"/>
+      <path d="M-86 120h172a86 26 0 0 1-172 0z" fill="#1f6b43"/><ellipse cx="0" cy="120" rx="86" ry="10" fill="#3fd47e"/>
+      <g id="wL"></g>
+      <text x="0" y="178" text-anchor="middle" fill="#3fd47e" font-family="Unbounded" font-size="16" font-weight="700">ПЛЮСЫ</text>
+    </g>
+    <g id="panR">
+      <path d="M0 0L-62 120M0 0L62 120" stroke="#5a616c" stroke-width="2"/>
+      <path d="M-86 120h172a86 26 0 0 1-172 0z" fill="#7a2630"/><ellipse cx="0" cy="120" rx="86" ry="10" fill="#ff5b6b"/>
+      <g id="wR"></g>
+      <text x="0" y="178" text-anchor="middle" fill="#ff5b6b" font-family="Unbounded" font-size="16" font-weight="700">МИНУСЫ</text>
+    </g>
+  </svg>
+</div></section>
+
+<!-- PROS -->
+<section id="plus" style="background:linear-gradient(#0e0f12,#0f1513 50%,#0e0f12)"><div class="wrap">
+  <div class="sec-head rv"><span class="tag p">Плюсы</span><h2>За что Blender <span class="plus-c">любят</span></h2><p>Девять причин, почему его выбирают новички, фрилансеры и даже студии, которые получают «Оскар».</p></div>
+  <div class="cards">
+    <article class="card pro rv"><span class="num">+01</span><div class="ic"><svg viewBox="0 0 48 48"><g class="spinY"><circle cx="24" cy="24" r="17" fill="#3fd47e"/><circle cx="24" cy="24" r="12.5" fill="none" stroke="#1f6b43" stroke-width="2"/><text x="24" y="30" text-anchor="middle" font-size="17" font-weight="800" fill="#0d2a1a" font-family="Unbounded">0</text></g></svg></div>
+      <h3>Полностью бесплатный</h3><p>Никаких подписок, пробных периодов и лицензий. Можно использовать даже в коммерческих проектах и зарабатывать.</p><span class="note">0 ₽ навсегда</span></article>
+    <article class="card pro rv" style="--d:.08s"><span class="num">+02</span><div class="ic"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="7" fill="#3fd47e"/><circle cx="24" cy="24" r="17" fill="none" stroke="#3fd47e55" stroke-dasharray="3 4"/><g class="orbit"><circle cx="24" cy="7" r="4" fill="#ff9a3c"/><circle cx="41" cy="24" r="3.5" fill="#4c8dff"/></g><g class="orbit r"><circle cx="9" cy="33" r="3" fill="#ff5b6b"/></g></svg></div>
+      <h3>Всё в одной программе</h3><p>Моделирование, скульптинг, анимация, симуляции, рендер, композитинг и даже видеомонтаж — без кучи отдельных программ.</p></article>
+    <article class="card pro rv" style="--d:.16s"><span class="num">+03</span><div class="ic"><svg viewBox="0 0 48 48"><path d="M16 12L5 24l11 12M32 12l11 12-11 12" fill="none" stroke="#3fd47e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path class="blink" d="M28 10 20 38" stroke="#ff9a3c" stroke-width="4" stroke-linecap="round"/></svg></div>
+      <h3>Открытый код</h3><p>Программу не «закроют» и не сделают платной. Её развивают Blender Foundation, компании-спонсоры и тысячи добровольцев.</p></article>
+    <article class="card pro rv"><span class="num">+04</span><div class="ic"><svg viewBox="0 0 48 48"><circle class="pulse" cx="24" cy="24" r="14" fill="none" stroke="#3fd47e" stroke-width="2"/><circle cx="24" cy="18" r="5" fill="#3fd47e"/><path d="M15 34a9 9 0 0 1 18 0z" fill="#3fd47e"/><circle cx="10" cy="22" r="3.5" fill="#3fd47e99"/><circle cx="38" cy="22" r="3.5" fill="#3fd47e99"/></svg></div>
+      <h3>Огромное сообщество</h3><p>Тысячи бесплатных уроков на YouTube, в том числе на русском. Почти на любой вопрос уже есть ответ на форуме.</p><span class="note">урок «Пончик» — классика</span></article>
+    <article class="card pro rv" style="--d:.08s"><span class="num">+05</span><div class="ic"><svg viewBox="0 0 48 48"><g class="float"><rect x="9" y="14" width="30" height="20" rx="3" fill="none" stroke="#3fd47e" stroke-width="3"/><path d="M5 38h38" stroke="#3fd47e" stroke-width="3" stroke-linecap="round"/><path d="M24 18v10m-4-4 4 4 4-4" stroke="#ff9a3c" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></svg></div>
+      <h3>Лёгкий и быстрый в установке</h3><p>Ставится за пару минут, работает на Windows, macOS и Linux, есть portable-версия на флешку. Для учёбы хватает обычного ноутбука.</p></article>
+    <article class="card pro rv" style="--d:.16s"><span class="num">+06</span><div class="ic"><svg viewBox="0 0 48 48"><defs><clipPath id="cp6"><circle cx="24" cy="24" r="16"/></clipPath><radialGradient id="g6" cx=".35" cy=".3"><stop offset="0" stop-color="#b6ffd5"/><stop offset=".55" stop-color="#3fd47e"/><stop offset="1" stop-color="#145233"/></radialGradient></defs><circle cx="24" cy="24" r="16" fill="url(#g6)"/><g clip-path="url(#cp6)"><rect class="shine" x="14" y="2" width="7" height="44" fill="#fff" opacity=".45" transform="skewX(-18)"/></g></svg></div>
+      <h3>Два мощных рендер-движка</h3><p><b>Cycles</b> — фотореалистичный, <b>EEVEE</b> — быстрый, почти в реальном времени. Оба встроены и бесплатны.</p></article>
+    <article class="card pro rv"><span class="num">+07</span><div class="ic"><svg viewBox="0 0 48 48"><rect x="3" y="8" width="16" height="14" rx="3" fill="#3fd47e"/><rect x="29" y="26" width="16" height="14" rx="3" fill="#4c8dff"/><path class="flow" d="M19 15c10 0 0 18 10 18" fill="none" stroke="#ff9a3c" stroke-width="2.5"/><circle cx="19" cy="15" r="2.5" fill="#ff9a3c"/><circle cx="29" cy="33" r="2.5" fill="#ff9a3c"/></svg></div>
+      <h3>Geometry Nodes</h3><p>Процедурная магия на нодах: вырастить лес, рассыпать камни, построить город — и всё меняется одним ползунком.</p></article>
+    <article class="card pro rv" style="--d:.08s"><span class="num">+08</span><div class="ic"><svg viewBox="0 0 48 48"><path d="M6 12h14v6a4 4 0 1 0 0 8v8H6z" fill="#3fd47e"/><g class="snap"><path d="M22 12h20v22H22v-8a4 4 0 1 1 0-8z" fill="#ff9a3c"/></g></svg></div>
+      <h3>Аддоны и Python</h3><p>Тысячи дополнений — бесплатных и платных. Можно написать свой скрипт на Python и автоматизировать рутину.</p></article>
+    <article class="card pro rv" style="--d:.16s"><span class="num">+09</span><div class="ic"><svg viewBox="0 0 48 48"><g class="orbit"><path d="M38 20A15 15 0 0 0 11 15" fill="none" stroke="#3fd47e" stroke-width="3.5" stroke-linecap="round"/><path d="M8 9v7h7" fill="none" stroke="#3fd47e" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 28a15 15 0 0 0 27 5" fill="none" stroke="#ff9a3c" stroke-width="3.5" stroke-linecap="round"/><path d="M40 39v-7h-7" fill="none" stroke="#ff9a3c" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g></svg></div>
+      <h3>Быстро развивается</h3><p>Несколько крупных версий в год с новыми функциями. Мультфильм «Flow», сделанный в Blender, получил «Оскар».</p><span class="note">«Оскар» 2025</span></article>
+  </div>
+</div></section>
+
+<!-- PIPELINE -->
+<section id="pipe"><div class="pipe-sticky">
+  <div class="pipe-bg" id="pipeBg"></div>
+  <div class="pipe-cv" id="pipeCv">
+    <div class="hud"><i></i>
+      <div class="tl"><b id="hudStep">Шаг 1/7</b> · <span id="hudName">Добавить тор</span><br>Вершины: <b id="hudV">60</b></div>
+      <div class="br"><span class="mode" id="hudMode">Каркас</span><br><span id="hudR">Прокручивайте вниз ↓</span></div>
+    </div>
+  </div>
+  <div class="pipe-left">
+    <span class="tag p" style="align-self:flex-start">Плюс №2 в действии</span>
+    <h2>Пончик от первой вершины до рендера — в одной программе</h2>
+    <ol class="psteps" id="psteps"><i class="prail" id="prail"></i></ol>
+  </div>
+</div></section>
+
+<!-- CONS -->
+<section id="minus" style="background:linear-gradient(#0e0f12,#150f11 50%,#0e0f12)"><div class="wrap">
+  <div class="sec-head rv"><span class="tag m">Минусы</span><h2>Где Blender <span class="minus-c">подводит</span></h2><p>Идеальных программ нет. Вот о чём стоит знать заранее, чтобы не разочароваться.</p></div>
+  <div class="cards">
+    <article class="card con rv"><span class="num">−01</span><div class="ic"><svg viewBox="0 0 48 48"><path d="M3 42 20 12l8 13 5-7 12 24z" fill="#ff5b6b55" stroke="#ff5b6b" stroke-width="2.5" stroke-linejoin="round"/><g class="climb"><circle cx="12" cy="34" r="3.5" fill="#fff"/></g></svg></div>
+      <h3>Сложно начать</h3><p>Сотни кнопок и горячих клавиш. Первые дни кажется, что ничего не понятно, — без уроков легко бросить.</p><span class="note">нужно 2–4 недели практики</span></article>
+    <article class="card con rv" style="--d:.08s"><span class="num">−02</span><div class="ic"><svg viewBox="0 0 48 48"><rect x="10" y="6" width="28" height="38" rx="3" fill="none" stroke="#ff5b6b" stroke-width="3"/><rect class="win" style="--d:0s" x="16" y="12" width="6" height="6" fill="#ff5b6b"/><rect class="win" style="--d:-.7s" x="26" y="12" width="6" height="6" fill="#ff5b6b"/><rect class="win" style="--d:-1.4s" x="16" y="22" width="6" height="6" fill="#ff5b6b"/><rect class="win" style="--d:-2.1s" x="26" y="22" width="6" height="6" fill="#ff5b6b"/><rect x="20" y="34" width="8" height="10" fill="#ff5b6b"/></svg></div>
+      <h3>Не стандарт в крупных студиях</h3><p>В большом кино и AAA-играх чаще требуют Maya, 3ds Max или Houdini. Для работы в такой студии Blender может быть недостаточно.</p></article>
+    <article class="card con rv" style="--d:.16s"><span class="num">−03</span><div class="ic"><svg viewBox="0 0 48 48"><rect x="19" y="4" width="10" height="30" rx="5" fill="none" stroke="#ff5b6b" stroke-width="3"/><circle cx="24" cy="38" r="7" fill="#ff5b6b"/><rect class="therm" x="22" y="10" width="4" height="26" rx="2" fill="#ff5b6b"/></svg></div>
+      <h3>Рендер любит мощное железо</h3><p>Учиться можно на слабом ПК, но фотореалистичный рендер в Cycles на слабой видеокарте идёт очень долго.</p></article>
+    <article class="card con rv"><span class="num">−04</span><div class="ic"><svg viewBox="0 0 48 48"><rect class="shuffle1" x="6" y="6" width="16" height="16" rx="3" fill="#ff5b6b"/><rect class="shuffle2" x="20" y="20" width="16" height="16" rx="3" fill="#ff9a3c"/><rect x="28" y="6" width="14" height="10" rx="3" fill="#ff5b6b55"/><rect x="6" y="32" width="10" height="10" rx="3" fill="#ff5b6b55"/></svg></div>
+      <h3>Часто всё меняется</h3><p>Интерфейс и функции переделывают от версии к версии: старые уроки устаревают, а аддоны иногда ломаются после обновления.</p></article>
+    <article class="card con rv" style="--d:.08s"><span class="num">−05</span><div class="ic"><svg viewBox="0 0 48 48"><g class="wob"><path d="M6 8h36v24H20l-9 8v-8H6z" fill="none" stroke="#ff5b6b" stroke-width="3" stroke-linejoin="round"/><text x="24" y="27" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="15" fill="#ff5b6b">?</text></g></svg></div>
+      <h3>Нет официальной поддержки</h3><p>Нельзя позвонить в техподдержку, как у платных программ. Помощь — только от сообщества и форумов.</p></article>
+    <article class="card con rv" style="--d:.16s"><span class="num">−06</span><div class="ic"><svg viewBox="0 0 48 48"><g class="gear"><path d="M24 8l3 4 5-1 1 5 5 2-2 5 3 4-4 3 1 5-5 1-2 5-5-2-4 3-3-4-5 1-1-5-5-2 2-5-3-4 4-3-1-5 5-1 2-5 5 2z" fill="none" stroke="#ff5b6b" stroke-width="2.5" stroke-linejoin="round"/></g><circle cx="24" cy="25" r="6" fill="#ff5b6b"/></svg></div>
+      <h3>Слабее в узких нишах</h3><p>Для точных инженерных чертежей лучше CAD-программы, а для очень сложных симуляций в кино — Houdini.</p></article>
+  </div>
+</div></section>
+
+<!-- COMPARE -->
+<section id="compare"><div class="wrap">
+  <div class="sec-head rv"><span class="tag o">Сравнение</span><h2>Blender против платных программ</h2><p>Как он выглядит на фоне самых известных конкурентов.</p></div>
+  <div class="tbl-wrap rv" id="tbl">
+    <table>
+      <thead><tr><th>Критерий</th><th class="col-b">Blender</th><th>Maya</th><th>3ds Max</th><th>Cinema 4D</th></tr></thead>
+      <tbody>
+        <tr style="--d:.05s"><td>Цена</td><td class="col-b"><b class="plus-c">Бесплатно</b></td><td>Подписка, ≈ $2 000/год</td><td>Подписка, ≈ $2 000/год</td><td>Подписка, от ≈ $700/год</td></tr>
+        <tr style="--d:.12s"><td>Порог входа</td><td class="col-b"><span class="dots">●●●<i>●●</i></span></td><td><span class="dots">●●<i>●●●</i></span></td><td><span class="dots">●●●<i>●●</i></span></td><td><span class="dots">●●●●<i>●</i></span></td></tr>
+        <tr style="--d:.19s"><td>Моделирование</td><td class="col-b"><span class="dots">●●●●●</span></td><td><span class="dots">●●●●<i>●</i></span></td><td><span class="dots">●●●●●</span></td><td><span class="dots">●●●●<i>●</i></span></td></tr>
+        <tr style="--d:.26s"><td>Анимация</td><td class="col-b"><span class="dots">●●●●<i>●</i></span></td><td><span class="dots">●●●●●</span></td><td><span class="dots">●●●<i>●●</i></span></td><td><span class="dots">●●●●<i>●</i></span></td></tr>
+        <tr style="--d:.33s"><td>Встроенный рендер</td><td class="col-b">Cycles + EEVEE</td><td>Arnold</td><td>Arnold</td><td>Redshift</td></tr>
+        <tr style="--d:.40s"><td>Спрос в больших студиях</td><td class="col-b"><span class="dots">●●●<i>●●</i></span></td><td><span class="dots">●●●●●</span></td><td><span class="dots">●●●●<i>●</i></span></td><td><span class="dots">●●●<i>●●</i></span></td></tr>
+        <tr style="--d:.47s"><td>Системы</td><td class="col-b">Windows, macOS, Linux</td><td>Windows, macOS, Linux</td><td>Только Windows</td><td>Windows, macOS</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small">Цены примерные и зависят от страны и тарифа. Оценки — субъективное мнение автора сайта.</p>
+</div></section>
+
+<!-- WHO -->
+<section style="padding-top:20px"><div class="wrap">
+  <div class="sec-head rv"><span class="tag o">Кому подойдёт</span><h2>Стоит ли учить именно вам?</h2></div>
+  <div class="who">
+    <div class="who-col yes rv" id="whoYes"><h3 class="plus-c">Берите, если вы…</h3><ul>
+      <li style="--d:.1s"><b>✓</b>Новичок и хотите попробовать 3D без вложений</li>
+      <li style="--d:.2s"><b>✓</b>Фрилансер: модели, визуализации, реклама</li>
+      <li style="--d:.3s"><b>✓</b>Делаете инди-игры или моды</li>
+      <li style="--d:.4s"><b>✓</b>Хотите 3D-печать, арт или короткие мультфильмы</li>
+      <li style="--d:.5s"><b>✓</b>Любите учиться по YouTube-урокам</li>
+    </ul></div>
+    <div class="who-col no rv" id="whoNo" style="--d:.1s"><h3 class="minus-c">Подумайте, если вы…</h3><ul>
+      <li style="--d:.15s"><b>!</b>Целитесь в большую киностудию с конкретным пайплайном</li>
+      <li style="--d:.25s"><b>!</b>Инженер, которому нужны точные чертежи (CAD)</li>
+      <li style="--d:.35s"><b>!</b>Не готовы потратить пару недель на освоение</li>
+      <li style="--d:.45s"><b>!</b>Нуждаетесь в официальной техподдержке</li>
+    </ul></div>
+  </div>
+</div></section>
+
+<!-- GAME -->
+<section id="game"><div class="wrap game">
+  <div class="rv">
+    <span class="tag o">Мини-игра</span>
+    <div class="sec-head" style="margin-bottom:0">
+      <h2>Плюс или минус?</h2>
+      <p>Смахните карточку <b class="plus-c">вправо</b>, если это плюс Blender, и <b class="minus-c">влево</b>, если минус. Можно кнопками или стрелками ← →.</p>
+    </div>
+    <div class="gscore">
+      <div><b id="gPos">1/8</b><span>карточка</span></div>
+      <div><b id="gScore" class="plus-c">0</b><span>верных ответов</span></div>
+    </div>
+  </div>
+  <div class="rv" style="--d:.1s">
+    <div class="deck" id="deck"></div>
+    <div class="gbtns" id="gbtns"><button class="gbtn m" data-a="m">← Минус</button><button class="gbtn p" data-a="p">Плюс →</button></div>
+    <div class="gfb" id="gfb"></div>
+  </div>
+</div></section>
+
+<!-- VERDICT -->
+<section id="verdict"><div class="wrap">
+  <div class="sec-head rv"><span class="tag o">Вердикт</span><h2>Итоговая оценка</h2></div>
+  <div class="verdict">
+    <div class="bars" id="bars"></div>
+    <div class="ring-box rv" id="ring">
+      <svg viewBox="0 0 200 200"><defs><linearGradient id="gr" x1="0" x2="1"><stop offset="0" stop-color="#3fd47e"/><stop offset="1" stop-color="#ff9a3c"/></linearGradient></defs>
+        <circle cx="100" cy="100" r="86" fill="none" stroke="#22262d" stroke-width="14"/>
+        <circle id="ringArc" cx="100" cy="100" r="86" fill="none" stroke="url(#gr)" stroke-width="14" stroke-linecap="round" stroke-dasharray="540.35" stroke-dashoffset="540.35" style="transition:stroke-dashoffset 2s cubic-bezier(.2,.8,.2,1)"/></svg>
+      <div class="val"><div><b id="score">0.0</b><span>из 10</span></div></div>
+    </div>
+  </div>
+  <div class="final rv">
+    <h3>Плюсы <span class="plus-c">перевешивают</span>: для старта в 3D лучше Blender сейчас почти ничего нет.</h3>
+    <p>Он бесплатный, умеет почти всё и с каждым годом становится сильнее. Главная цена — ваше время: первые недели будут трудными. Если цель — крупная студия, со временем стоит посмотреть и на Maya или Houdini, но база, полученная в Blender, пригодится везде.</p>
+    <a class="btn main" href="https://www.blender.org/download/" target="_blank" rel="noopener">Скачать Blender с официального сайта ↗</a>
+  </div>
+</div></section>
+
+<footer><div class="wrap"><span>Неофициальный фан-сайт. Blender® — товарный знак Blender Foundation.</span><span>Сделано с three.js · 2026</span></div></footer>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- nav + progress ---------- */
+const nav = $('#nav'), prog = $('#progress');
+const secs = ['scale', 'plus', 'pipe', 'minus', 'game', 'verdict'].map(id => document.getElementById(id));
+function onScroll() {
+  const y = scrollY, h = document.documentElement.scrollHeight - innerHeight;
+  prog.style.transform = `scaleX(${h ? y / h : 0})`;
+  nav.classList.toggle('solid', y > 30);
+  let cur = null; secs.forEach(s => { if (s.getBoundingClientRect().top < innerHeight * 0.4) cur = s.id; });
+  $$('.links a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + cur));
+}
+addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+/* ---------- counters ---------- */
+function countUp(el, to, dec = 0, dur = 1400) {
+  const t0 = performance.now();
+  const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = (to * e).toFixed(dec); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+setTimeout(() => $$('[data-count]').forEach(el => countUp(el, +el.dataset.count)), 900);
+
+/* ---------- reveal on scroll ---------- */
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  e.target.classList.add('in'); io.unobserve(e.target);
+  if (e.target.id === 'scaleSvg') startScale();
+  if (e.target.id === 'ring') startVerdict();
+}), { threshold: 0.18 });
+$$('.rv').forEach(el => io.observe(el));
+
+/* ---------- card glow follows mouse + tilt ---------- */
+$$('.card').forEach(c => {
+  c.addEventListener('pointermove', e => {
+    const r = c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    c.style.setProperty('--mx', x + 'px'); c.style.setProperty('--my', y + 'px');
+    if (!reduce) c.style.transform = `perspective(800px) rotateX(${(y / r.height - .5) * -6}deg) rotateY(${(x / r.width - .5) * 6}deg) translateY(-4px)`;
+  });
+  c.addEventListener('pointerleave', () => { c.style.transform = ''; });
+});
+
+/* ---------- balance scale ---------- */
+const PROS = 9, CONS = 6, ARM = 210, PX = 320, PY = 95;
+let angle = 0, target = 0, vel = 0, nL = 0, nR = 0, scaleStarted = false;
+function placePans() {
+  const a = angle * Math.PI / 180;
+  $('#beam').setAttribute('transform', `rotate(${angle} ${PX} ${PY})`);
+  $('#panL').setAttribute('transform', `translate(${PX - ARM * Math.cos(a)} ${PY - ARM * Math.sin(a)})`);
+  $('#panR').setAttribute('transform', `translate(${PX + ARM * Math.cos(a)} ${PY + ARM * Math.sin(a)})`);
+}
+function addWeight(side) {
+  const g = side === 'L' ? $('#wL') : $('#wR'), n = side === 'L' ? nL++ : nR++;
+  const perRow = 4, row = Math.floor(n / perRow), col = n % perRow, inRow = Math.min(perRow, (side === 'L' ? PROS : CONS) - row * perRow);
+  const x = (col - (inRow - 1) / 2) * 36, y = 100 - row * 24;
+  const w = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  w.innerHTML = `<g class="weight"><rect x="${x - 16}" y="${y - 2}" width="32" height="22" rx="6" fill="${side === 'L' ? '#3fd47e' : '#ff5b6b'}" stroke="#0e0f12" stroke-width="2"/><text x="${x}" y="${y + 14}" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="14" fill="#0e0f12">${side === 'L' ? '+' : '−'}</text></g>`;
+  g.appendChild(w);
+  $('#lgP').textContent = nL; $('#lgM').textContent = nR;
+  target = Math.max(-14, Math.min(14, (nR - nL) * 2.4));
+}
+function startScale() {
+  if (scaleStarted) return; scaleStarted = true;
+  const order = []; for (let i = 0; i < Math.max(PROS, CONS); i++) { if (i < CONS) order.push('R'); if (i < PROS) order.push('L'); }
+  order.forEach((s, i) => setTimeout(() => addWeight(s), 300 + i * 260));
+}
+(function scaleLoop() {
+  vel += (target - angle) * 0.04; vel *= 0.86; angle += vel;
+  placePans(); requestAnimationFrame(scaleLoop);
+})();
+
+/* ---------- verdict ---------- */
+const RATES = [['Цена', 10, '#3fd47e', '#8ff0b8'], ['Возможности', 9, '#3fd47e', '#ff9a3c'], ['Качество рендера', 9, '#3fd47e', '#ff9a3c'], ['Сообщество и уроки', 10, '#3fd47e', '#8ff0b8'], ['Простота для новичка', 5, '#ff5b6b', '#ff9a3c'], ['Спрос в больших студиях', 6, '#ff5b6b', '#ff9a3c'], ['Стабильность между версиями', 7, '#ff9a3c', '#ffc98f']];
+$('#bars').innerHTML = RATES.map(([n, v, c1, c2], i) => `<div class="rv" style="--d:${i * 0.07}s"><div class="bar-top"><span>${n}</span><span>${v}/10</span></div><div class="bar"><i style="--c1:${c1};--c2:${c2};--d:${0.2 + i * 0.1}s" data-w="${v * 10}"></i></div></div>`).join('');
+$$('#bars .rv').forEach(el => io.observe(el));
+let verdictDone = false;
+function startVerdict() {
+  if (verdictDone) return; verdictDone = true;
+  const avg = RATES.reduce((a, r) => a + r[1], 0) / RATES.length;
+  $$('#bars i').forEach(i => i.style.width = i.dataset.w + '%');
+  $('#ringArc').style.strokeDashoffset = 540.35 * (1 - avg / 10);
+  countUp($('#score'), avg, 1, 2000);
+}
+
+/* ---------- hero 3D ---------- */
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.AgXToneMapping;
+renderer.shadowMap.enabled = true;
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.9;
+const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+camera.position.set(0, 1.2, 13);
+const sun = new THREE.DirectionalLight(0xffe2c4, 2.4); sun.position.set(4, 6, 5); scene.add(sun);
+const rim = new THREE.DirectionalLight(0x6fa0ff, 2); rim.position.set(-6, 2, -4); scene.add(rim);
+
+const std = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.45, ...o });
+function donut() {
+  const g = new THREE.Group(), R = 1, r = 0.45;
+  const d = new THREE.Mesh(new THREE.TorusGeometry(R, r, 32, 72), std(0xd39a5b, { roughness: .6 })); d.rotation.x = -Math.PI / 2; g.add(d);
+  const U = 160, V = 32, pos = [], idx = [];
+  for (let i = 0; i <= U; i++) { const u = i / U * Math.PI * 2, n = Math.sin(u * 5) + Math.sin(u * 11 + 1.3) * .6;
+    const dO = .22 + Math.max(0, n) * .3, dI = .18 + Math.max(0, Math.sin(u * 7 + 2)) * .2;
+    for (let j = 0; j <= V; j++) { const v = -dO + j / V * (Math.PI + dO + dI), rr = r * 1.075, rad = R + rr * Math.cos(v); pos.push(Math.cos(u) * rad, rr * Math.sin(v), Math.sin(u) * rad); } }
+  for (let i = 0; i < U; i++) for (let j = 0; j < V; j++) { const a = i * (V + 1) + j, b = a + V + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
+  const ig = new THREE.BufferGeometry(); ig.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); ig.setIndex(idx); ig.computeVertexNormals();
+  g.add(new THREE.Mesh(ig, std(0xff7fb2, { roughness: .25, side: THREE.DoubleSide })));
+  const N = 130, cols = [0xffffff, 0x5ac8fa, 0xffd60a, 0x34c759, 0xff375f, 0xaf52de].map(c => new THREE.Color(c));
+  const sp = new THREE.InstancedMesh(new THREE.CapsuleGeometry(.02, .09, 3, 6), std(0xffffff), N), m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
+  for (let k = 0; k < N; k++) { const u = Math.random() * Math.PI * 2, v = .35 + Math.random() * 2.45, rr = r * 1.075 + .02, rad = R + rr * Math.cos(v);
+    const p = new THREE.Vector3(Math.cos(u) * rad, rr * Math.sin(v), Math.sin(u) * rad), nr = new THREE.Vector3(Math.cos(u) * Math.cos(v), Math.sin(v), Math.sin(u) * Math.cos(v));
+    q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(Math.random() - .5, Math.random() - .5, Math.random() - .5).cross(nr).normalize());
+    sp.setMatrixAt(k, m4.compose(p, q, new THREE.Vector3(1, 1, 1))); sp.setColorAt(k, cols[k % 6]); }
+  g.add(sp); return g;
+}
+function monkey() {
+  const g = new THREE.Group(), fur = std(0x8d5a3b, { roughness: .7, flatShading: true }), skin = std(0xe0b088, { roughness: .6, flatShading: true });
+  const add = (geo, m, p, s = [1, 1, 1], r = [0, 0, 0]) => { const o = new THREE.Mesh(geo, m); o.position.set(...p); o.scale.set(...s); o.rotation.set(...r); g.add(o); };
+  add(new THREE.SphereGeometry(1, 14, 10), fur, [0, 0, 0], [1.02, .95, .92]);
+  [-1, 1].forEach(s => {
+    add(new THREE.SphereGeometry(.46, 12, 8), fur, [1.1 * s, .12, -.12], [1, 1, .34], [0, .5 * s, 0]);
+    add(new THREE.SphereGeometry(.3, 10, 6), skin, [1.12 * s, .12, -.05], [1, 1, .3], [0, .5 * s, 0]);
+    add(new THREE.SphereGeometry(.42, 12, 8), skin, [.36 * s, .22, .62], [1, 1.12, .62]);
+    add(new THREE.SphereGeometry(.2, 14, 10), std(0xf5f5f5, { roughness: .2 }), [.36 * s, .25, .86]);
+    add(new THREE.SphereGeometry(.09, 10, 8), std(0x111111, { roughness: .2 }), [.34 * s, .24, 1.03]);
+  });
+  add(new THREE.SphereGeometry(.58, 14, 8), skin, [0, -.36, .62], [1.25, .72, .72]);
+  add(new THREE.TorusGeometry(.28, .035, 6, 16, Math.PI), std(0x111111), [0, -.42, 1.02], [1, .6, 1], [Math.PI, 0, 0]);
+  return g;
+}
+const items = [];
+function put(obj, p, s, spin) { obj.position.set(...p); obj.scale.setScalar(s); scene.add(obj); items.push({ obj, base: new THREE.Vector3(...p), spin, ph: Math.random() * 6 }); return obj; }
+const dn = put(donut(), [-1.6, 1.6, 0], 1.25, [0.5, 0.3, 0]); dn.rotation.x = 0.9;
+put(monkey(), [1.4, -0.6, 0.8], 1.2, [0, 0.35, 0]);
+const cube = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.3, 1.3), std(0xff9a3c, { roughness: .3 })); put(cube, [-1.8, -1.9, -1], 1, [0.4, 0.6, 0]);
+const ball = new THREE.Mesh(new THREE.IcosahedronGeometry(.6, 1), std(0x4c8dff, { roughness: .25, flatShading: true })); put(ball, [2.2, 2.2, -1.5], 1, [0.3, 0.5, 0]);
+const tor = new THREE.Mesh(new THREE.TorusKnotGeometry(.42, .14, 120, 16), std(0x3fd47e, { roughness: .3 })); put(tor, [0.3, 0.6, -3], 1, [0.6, 0.4, 0]);
+
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.position.z = w / h < 0.9 ? 16 : 13; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(stage); resize();
+let mx = 0, my = 0, smx = 0, smy = 0;
+addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; });
+const clock = new THREE.Clock();
+let visible = true;
+new IntersectionObserver(([e]) => visible = e.isIntersecting).observe(stage);
+function loop() {
+  requestAnimationFrame(loop);
+  if (!visible) return;
+  const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
+  smx += (mx - smx) * .05; smy += (my - smy) * .05;
+  const sc = Math.min(1, scrollY / innerHeight);
+  items.forEach(it => {
+    if (!reduce) { it.obj.rotation.x += it.spin[0] * dt; it.obj.rotation.y += it.spin[1] * dt; }
+    it.obj.position.set(it.base.x + smx * (1 + it.base.z * .3), it.base.y + Math.sin(t * .9 + it.ph) * .18 + sc * (it.base.x > 0 ? 2 : 1.2), it.base.z);
+  });
+  scene.rotation.y = smx * .35; scene.rotation.x = smy * .2;
+  updateBurst(dt);
+  renderer.render(scene, camera);
+}
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(html, ms = 3200) { const t = $('#toast'); t.innerHTML = html; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms); }
+
+/* ---------- easter egg: delete the default cube ---------- */
+const cubeItem = items.find(i => i.obj === cube);
+let cubeGone = false, cubeAnim = null;
+const burst = [];
+function deleteCube() {
+  if (cubeGone) return toast('Куб уже удалён 🙂 <span class="kbd">Ctrl Z</span> — вернуть');
+  cubeGone = true; cubeAnim = { from: 1, to: 0, t: 0 };
+  const p = cube.getWorldPosition(new THREE.Vector3());
+  for (let i = 0; i < 18; i++) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(.18, .18, .18), std(0xff9a3c, { transparent: true }));
+    m.position.copy(p).sub(scene.position); scene.worldToLocal(m.position.copy(p));
+    m.userData.v = new THREE.Vector3(Math.random() - .5, Math.random() * .8 + .2, Math.random() - .5).multiplyScalar(6);
+    m.userData.life = 1; scene.add(m); burst.push(m);
+  }
+  toast('🧊 Куб удалён. Традиция каждого пользователя Blender соблюдена! <span class="kbd">Ctrl Z</span> — вернуть');
+}
+function restoreCube() { if (!cubeGone) return; cubeGone = false; cubeAnim = { from: 0, to: 1, t: 0 }; toast('↩ Отменено: куб вернулся'); }
+function updateBurst(dt) {
+  if (cubeAnim) { cubeAnim.t = Math.min(1, cubeAnim.t + dt * 3); const e = cubeAnim.t; cube.scale.setScalar(cubeAnim.from + (cubeAnim.to - cubeAnim.from) * (cubeAnim.to ? 1 - Math.pow(1 - e, 3) * Math.cos(e * 6) : e * e)); if (e >= 1) cubeAnim = null; }
+  for (let i = burst.length - 1; i >= 0; i--) {
+    const m = burst[i]; m.userData.v.y -= 9 * dt; m.position.addScaledVector(m.userData.v, dt); m.rotation.x += dt * 5; m.rotation.y += dt * 4;
+    m.userData.life -= dt * .9; m.material.opacity = Math.max(0, m.userData.life);
+    if (m.userData.life <= 0) { scene.remove(m); burst.splice(i, 1); }
+  }
+}
+const heroRay = new THREE.Raycaster();
+renderer.domElement.addEventListener('click', e => {
+  const r = renderer.domElement.getBoundingClientRect();
+  heroRay.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), camera);
+  if (!cubeGone && heroRay.intersectObject(cube).length) deleteCube();
+});
+addEventListener('keydown', e => {
+  if (e.target.matches('input,textarea')) return;
+  if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') { if (cubeGone) { e.preventDefault(); restoreCube(); } return; }
+  if (e.code === 'KeyX' && !e.ctrlKey && !e.altKey) deleteCube();
+  if (gameVisible && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); answer(e.key === 'ArrowRight' ? 'p' : 'm'); }
+});
+
+/* ---------- Blender 3D-cursor as mouse cursor ---------- */
+if (matchMedia('(pointer:fine)').matches && !reduce) {
+  const cur = $('#cur'); cur.style.display = 'block';
+  let cx = innerWidth / 2, cy = innerHeight / 2, tx = cx, ty = cy;
+  addEventListener('pointermove', e => { tx = e.clientX; ty = e.clientY; });
+  document.addEventListener('pointerover', e => cur.classList.toggle('big', !!e.target.closest('a,button,.card,.gcard,canvas')));
+  (function cl() { cx += (tx - cx) * .22; cy += (ty - cy) * .22; cur.style.transform = `translate(${cx}px,${cy}px)`; requestAnimationFrame(cl); })();
+}
+
+/* ---------- confetti ---------- */
+const cf = $('#confetti'), cfx = cf.getContext('2d');
+let parts = [];
+function confetti() {
+  cf.width = innerWidth; cf.height = innerHeight;
+  const cols = ['#3fd47e', '#ff9a3c', '#ff5b6b', '#4c8dff', '#ffd60a', '#ffffff'];
+  for (let i = 0; i < 180; i++) parts.push({ x: innerWidth / 2, y: innerHeight * .55, vx: (Math.random() - .5) * 18, vy: -Math.random() * 18 - 6, r: Math.random() * 6.28, vr: (Math.random() - .5) * .4, c: cols[i % 6], w: 6 + Math.random() * 6, h: 4 + Math.random() * 4, life: 1 });
+  if (parts.length === 180) requestAnimationFrame(cfLoop);
+}
+function cfLoop() {
+  cfx.clearRect(0, 0, cf.width, cf.height);
+  parts.forEach(p => { p.vy += .45; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life -= .006;
+    cfx.save(); cfx.globalAlpha = Math.max(0, p.life); cfx.translate(p.x, p.y); cfx.rotate(p.r); cfx.fillStyle = p.c; cfx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); cfx.restore(); });
+  parts = parts.filter(p => p.life > 0 && p.y < cf.height + 40);
+  if (parts.length) requestAnimationFrame(cfLoop); else cfx.clearRect(0, 0, cf.width, cf.height);
+}
+
+/* ---------- swipe game ---------- */
+const Q = [
+  ['Blender стоит 0 ₽ даже для коммерческих проектов', 'p', 'Лицензия GPL: можно продавать модели и рендеры, ничего не платя.'],
+  ['Интерфейс заметно меняется от версии к версии', 'm', 'Старые уроки устаревают, а кнопки «переезжают».'],
+  ['Есть portable-версия, которую можно носить на флешке', 'p', 'Скачал архив, распаковал — и работаешь на любом компьютере.'],
+  ['Нельзя позвонить в официальную техподдержку', 'm', 'Помогают только форумы и сообщество.'],
+  ['Мультфильм, сделанный в Blender, получил «Оскар»', 'p', '«Flow» (Латвия) — лучший анимационный фильм 2025 года.'],
+  ['Крупные киностудии чаще требуют Maya или Houdini', 'm', 'Для работы в больших студиях Blender может не хватить.'],
+  ['Можно писать свои инструменты на Python', 'p', 'Встроенный Python API автоматизирует любую рутину.'],
+  ['Первые недели тяжело из-за сотен горячих клавиш', 'm', 'Порог входа — главный минус Blender.'],
+];
+const deck = $('#deck');
+let gi = 0, gScore = 0, gameVisible = false;
+new IntersectionObserver(([e]) => gameVisible = e.isIntersecting, { threshold: .4 }).observe($('#game'));
+function buildDeck() {
+  gi = 0; gScore = 0; deck.innerHTML = ''; $('#gfb').innerHTML = ''; $('#gbtns').style.visibility = '';
+  Q.forEach((q, i) => {
+    const c = document.createElement('div'); c.className = 'gcard'; c.dataset.i = i;
+    c.innerHTML = `<span class="gn">${i + 1} / ${Q.length}</span><span class="stamp p">ПЛЮС</span><span class="stamp m">МИНУС</span><div class="q">${q[0]}</div><div class="hint">← минус · плюс →</div>`;
+    deck.prepend(c); dragify(c);
+  });
+  layoutDeck(); gStats();
+}
+function layoutDeck() {
+  [...deck.children].forEach(c => {
+    const d = +c.dataset.i - gi; if (d < 0) return;
+    c.style.zIndex = 50 - d; c.style.opacity = d > 2 ? 0 : 1;
+    c.style.transform = `translateY(${d * 14}px) scale(${1 - d * .05})`;
+    c.style.pointerEvents = d === 0 ? 'auto' : 'none';
+  });
+}
+function gStats() { $('#gPos').textContent = `${Math.min(gi + 1, Q.length)}/${Q.length}`; $('#gScore').textContent = gScore; }
+function dragify(c) {
+  let sx = 0, sy = 0, dx = 0, on = false;
+  c.addEventListener('pointerdown', e => { if (+c.dataset.i !== gi) return; on = true; sx = e.clientX; sy = e.clientY; dx = 0; c.setPointerCapture(e.pointerId); c.classList.add('drag'); });
+  c.addEventListener('pointermove', e => {
+    if (!on) return; dx = e.clientX - sx; const dy = (e.clientY - sy) * .3;
+    c.style.transform = `translate(${dx}px,${dy}px) rotate(${dx / 18}deg)`;
+    c.querySelector('.stamp.p').style.opacity = Math.max(0, dx / 110); c.querySelector('.stamp.m').style.opacity = Math.max(0, -dx / 110);
+  });
+  const end = () => { if (!on) return; on = false; c.classList.remove('drag'); if (Math.abs(dx) > 100) answer(dx > 0 ? 'p' : 'm'); else { c.querySelectorAll('.stamp').forEach(s => s.style.opacity = 0); layoutDeck(); } };
+  c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
+}
+function answer(a) {
+  if (gi >= Q.length) return;
+  const c = deck.querySelector(`[data-i="${gi}"]`), q = Q[gi], ok = a === q[1];
+  c.querySelector('.stamp.' + a).style.opacity = 1;
+  c.style.transform = `translate(${a === 'p' ? 640 : -640}px,40px) rotate(${a === 'p' ? 32 : -32}deg)`; c.style.opacity = 0; c.style.pointerEvents = 'none';
+  if (ok) gScore++;
+  $('#gfb').innerHTML = `<b class="${ok ? 'ok' : 'no'}">${ok ? '✓ Верно!' : '✗ Не совсем.'}</b> Это ${q[1] === 'p' ? '<b class="ok">плюс</b>' : '<b class="no">минус</b>'}. ${q[2]}`;
+  gi++; layoutDeck(); gStats();
+  if (gi === Q.length) setTimeout(showResult, 450);
+}
+function showResult() {
+  const r = document.createElement('div'); r.className = 'gcard gres';
+  const msg = gScore === Q.length ? 'Идеально! Вы знаете Blender как свои пять пальцев.' : gScore >= 6 ? 'Отлично! Вы хорошо разбираетесь в Blender.' : gScore >= 4 ? 'Неплохо! Перечитайте плюсы и минусы выше.' : 'Самое время полистать сайт ещё раз 🙂';
+  r.innerHTML = `<div class="big">${gScore}/${Q.length}</div><p style="margin:14px 0 22px;color:#c4c9d2">${msg}</p><button class="btn main" style="border:0;cursor:pointer;align-self:center">Сыграть ещё раз</button>`;
+  r.querySelector('button').onclick = buildDeck;
+  deck.appendChild(r); $('#gbtns').style.visibility = 'hidden';
+  if (gScore >= 6) confetti();
+}
+$('#gbtns').addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b) answer(b.dataset.a); });
+buildDeck();
+
+/* ---------- pipeline: build a donut while scrolling ---------- */
+const STEPS = [
+  ['Добавить тор', 'Любая модель начинается с примитива. Пара кликов — и в сцене угловатый бублик.', 'Shift A → Сетка → Тор'],
+  ['Сглаживание', 'Модификатор Subdivision Surface делит каждую грань — бублик становится гладким.', 'Ctrl 2'],
+  ['Скульптинг', 'Кистями в режиме Sculpt добавляем неровности: настоящее тесто не бывает идеальным.', 'Режим Sculpt'],
+  ['Глазурь', 'Копируем верх пончика, отделяем и даём толщину — глазурь стекает по краям.', 'Shift D · P · Solidify'],
+  ['Посыпка', 'Geometry Nodes сами рассыпают 150 посыпок по глазури — без ручной расстановки.', 'Geometry Nodes'],
+  ['Материалы', 'Principled BSDF: тесто матовое, глазурь блестящая, посыпка разноцветная.', 'Вкладка Shading'],
+  ['Рендер', 'Свет, камера и F12 — Cycles считает фотореалистичную картинку. Готово!', 'F12'],
+];
+$('#psteps').insertAdjacentHTML('beforeend', STEPS.map(([t, d, k], i) => `<li class="ps"><span class="pn">0${i + 1}</span><div><h4>${t}</h4><div class="pd"><div><p>${d}</p><span class="kbd">${k}</span></div></div></div></li>`).join(''));
+const psEls = $$('#psteps .ps');
+
+const pcv = $('#pipeCv');
+const pr = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+pr.setPixelRatio(Math.min(devicePixelRatio, 2));
+pr.toneMapping = THREE.AgXToneMapping;
+pr.shadowMap.enabled = true; pr.shadowMap.type = THREE.PCFSoftShadowMap;
+pcv.prepend(pr.domElement);
+const ps = new THREE.Scene();
+ps.environment = new THREE.PMREMGenerator(pr).fromScene(new RoomEnvironment(), 0.04).texture;
+const pcam = new THREE.PerspectiveCamera(30, 1, .1, 100);
+const pKey = new THREE.DirectionalLight(0xffe0bd, 0); pKey.position.set(3, 6, 3); pKey.castShadow = true;
+pKey.shadow.mapSize.set(1024, 1024); Object.assign(pKey.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3 }); pKey.shadow.bias = -.0005;
+const pRim = new THREE.DirectionalLight(0x7aa8ff, 0); pRim.position.set(-4, 2, -3);
+ps.add(pKey, pRim);
+
+const R0 = 1, r0 = .45, SQ = .12;
+function torusData(U, V) {
+  const pos = [], nor = [], uv = [], idx = [];
+  for (let i = 0; i <= U; i++) for (let j = 0; j <= V; j++) {
+    const u = i / U * Math.PI * 2, v = j / V * Math.PI * 2;
+    pos.push((R0 + r0 * Math.cos(v)) * Math.cos(u), r0 * Math.sin(v), (R0 + r0 * Math.cos(v)) * Math.sin(u));
+    nor.push(Math.cos(v) * Math.cos(u), Math.sin(v), Math.cos(v) * Math.sin(u)); uv.push(u, v);
+  }
+  for (let i = 0; i < U; i++) for (let j = 0; j < V; j++) { const a = i * (V + 1) + j, b = a + V + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); g.setIndex(idx);
+  g.userData = { U, V, base: Float32Array.from(pos), uv };
+  return g;
+}
+const LV = [torusData(12, 8), torusData(24, 16), torusData(80, 44)];
+const noise = (u, v) => Math.sin(u * 3 + v * 2) * .5 + Math.sin(u * 7 - v * 3) * .3 + Math.sin(u * 13 + v * 5) * .2 + Math.sin(u * 23 + v * 11) * .12;
+let sculptAmt = -1;
+function sculpt(a) {
+  if (Math.abs(a - sculptAmt) < .002) return; sculptAmt = a;
+  const g = LV[2], p = g.attributes.position, b = g.userData.base, uv = g.userData.uv;
+  for (let k = 0; k < p.count; k++) {
+    const u = uv[2 * k], v = uv[2 * k + 1], n = noise(u, v) * .055 * a;
+    p.setXYZ(k, b[3 * k] + Math.cos(v) * Math.cos(u) * n, (b[3 * k + 1] + Math.sin(v) * n) * (1 - SQ * a), b[3 * k + 2] + Math.cos(v) * Math.sin(u) * n);
+  }
+  p.needsUpdate = true; g.computeVertexNormals();
+}
+const CLAY = new THREE.Color(0xb9b9b9);
+const doughCol = new THREE.Color(0xd39a5b), icingCol = new THREE.Color(0xff7fb2);
+const doughM = new THREE.MeshStandardMaterial({ color: CLAY.clone(), roughness: .6, flatShading: true });
+const dough = new THREE.Mesh(LV[0], doughM); dough.castShadow = true;
+const wireM = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: .5 });
+let wire = new THREE.LineSegments(new THREE.WireframeGeometry(LV[0]), wireM);
+const pd = new THREE.Group(); pd.add(dough, wire); ps.add(pd);
+let level = 0;
+function setLevel(l) {
+  if (l === level) return; level = l; dough.geometry = LV[l];
+  doughM.flatShading = l === 0; doughM.needsUpdate = true;
+  pd.remove(wire); wire.geometry.dispose(); wire = new THREE.LineSegments(new THREE.WireframeGeometry(LV[l]), wireM); pd.add(wire);
+}
+// icing
+const icingGeo = (() => {
+  const U = 180, V = 36, pos = [], idx = [];
+  for (let i = 0; i <= U; i++) {
+    const u = i / U * Math.PI * 2, n = Math.sin(u * 5) + Math.sin(u * 11 + 1.3) * .6 + Math.sin(u * 3 + .5) * .4;
+    const dO = .22 + Math.max(0, n) * .32, dI = .18 + Math.max(0, Math.sin(u * 7 + 2)) * .22;
+    for (let j = 0; j <= V; j++) { const v = -dO + j / V * (Math.PI + dO + dI), rr = r0 * 1.1 + .01 + Math.sin(v) * .012, rad = R0 + rr * Math.cos(v); pos.push(Math.cos(u) * rad, rr * Math.sin(v) * (1 - SQ), Math.sin(u) * rad); }
+  }
+  for (let i = 0; i < U; i++) for (let j = 0; j < V; j++) { const a = i * (V + 1) + j, b = a + V + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
+})();
+const icingM = new THREE.MeshStandardMaterial({ color: CLAY.clone(), roughness: .6, side: THREE.DoubleSide, transparent: true, opacity: 0 });
+const icing = new THREE.Mesh(icingGeo, icingM); icing.castShadow = true; pd.add(icing);
+// sprinkles
+const SN = 150, sprCols = [0xffffff, 0x5ac8fa, 0xffd60a, 0x34c759, 0xff375f, 0xaf52de].map(c => new THREE.Color(c));
+const spr = new THREE.InstancedMesh(new THREE.CapsuleGeometry(.02, .09, 3, 6), new THREE.MeshStandardMaterial({ roughness: .4 }), SN);
+{
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(); let sd = 11; const rnd = () => (sd = sd * 16807 % 2147483647) / 2147483647;
+  for (let k = 0; k < SN; k++) {
+    const u = rnd() * Math.PI * 2, v = .35 + rnd() * 2.45, rr = r0 * 1.1 + .03, rad = R0 + rr * Math.cos(v);
+    const p = new THREE.Vector3(Math.cos(u) * rad, rr * Math.sin(v) * (1 - SQ), Math.sin(u) * rad), nr = new THREE.Vector3(Math.cos(u) * Math.cos(v), Math.sin(v), Math.sin(u) * Math.cos(v));
+    q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(rnd() - .5, rnd() - .5, rnd() - .5).cross(nr).normalize());
+    spr.setMatrixAt(k, m4.compose(p, q, new THREE.Vector3(1, 1, 1))); spr.setColorAt(k, CLAY);
+  }
+}
+spr.count = 0; spr.castShadow = true; pd.add(spr);
+// plate
+const plate = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.55, .1, 72), new THREE.MeshPhysicalMaterial({ color: 0xf4f1ec, roughness: .18, clearcoat: .8 }));
+plate.position.y = -.48; plate.receiveShadow = true; plate.scale.setScalar(0.001); ps.add(plate);
+
+function pResize() { const w = pcv.clientWidth, h = pcv.clientHeight; if (!w || !h) return; pr.setSize(w, h, false); pcam.aspect = w / h; pcam.updateProjectionMatrix(); }
+new ResizeObserver(pResize).observe(pcv); pResize();
+let pVisible = false, sm = 0, lastStep = -1, lastCol = -1;
+new IntersectionObserver(([e]) => pVisible = e.isIntersecting).observe($('#pipe'));
+const cl01 = x => Math.max(0, Math.min(1, x));
+const ease = x => x * x * (3 - 2 * x);
+const pClock = new THREE.Clock(), tmpC = new THREE.Color();
+(function pLoop() {
+  requestAnimationFrame(pLoop);
+  const dt = pClock.getDelta();
+  if (!pVisible) return;
+  const rect = $('#pipe').getBoundingClientRect();
+  const prog = cl01(-rect.top / (rect.height - innerHeight));
+  const s = Math.min(7, prog * 7.4);
+  sm += (s - sm) * Math.min(1, dt * 8);
+  const t = pClock.elapsedTime;
+  // stage factors
+  setLevel(sm < 1.15 ? 0 : sm < 1.6 ? 1 : 2);
+  wireM.opacity = .5 * (1 - cl01((sm - 1.8) / .45));
+  wire.visible = wireM.opacity > .01;
+  sculpt(ease(cl01((sm - 2.1) / .8)));
+  const ic = ease(cl01((sm - 3.05) / .8));
+  icingM.opacity = ic; icing.visible = ic > .01; icing.position.y = (1 - ic) * .6; icingM.depthWrite = ic > .95;
+  spr.count = Math.floor(SN * cl01((sm - 4.05) / .85));
+  const col = ease(cl01((sm - 5.05) / .7));
+  doughM.color.copy(CLAY).lerp(doughCol, col); icingM.color.copy(CLAY).lerp(icingCol, col); icingM.roughness = .6 - .38 * col;
+  const cq = Math.round(col * 40);
+  if (cq !== lastCol) { lastCol = cq; for (let k = 0; k < SN; k++) spr.setColorAt(k, tmpC.copy(CLAY).lerp(sprCols[k % 6], col)); spr.instanceColor.needsUpdate = true; }
+  const rn = ease(cl01((sm - 6.05) / .7));
+  plate.scale.setScalar(.001 + rn); pKey.intensity = 2.8 * rn; pRim.intensity = 2.2 * rn;
+  ps.environmentIntensity = 1 - .45 * rn;
+  // motion
+  const pop = ease(cl01(sm / .5 + .3));
+  pd.scale.setScalar(.2 + .8 * pop);
+  pd.rotation.y = t * .25 + sm * .5; pd.rotation.x = .12 * Math.sin(t * .6) * (1 - rn);
+  const dist = 9.4 - rn * .6;
+  pcam.position.set(Math.sin(rn * .6) * dist * .3, 3.2 + (1 - rn) * .8, dist); pcam.lookAt(0, -.15, 0);
+  // UI
+  const step = Math.min(6, Math.floor(sm));
+  if (step !== lastStep) {
+    lastStep = step; psEls.forEach((el, i) => el.classList.toggle('on', i === step));
+    $('#hudStep').textContent = `Шаг ${step + 1}/7`; $('#hudName').textContent = STEPS[step][0];
+    const mode = sm < 2 ? ['Каркас', '#4772b3'] : sm < 5 ? ['Сплошной', '#4772b3'] : sm < 6 ? ['Материалы', '#b3477a'] : ['Рендер', '#d9761a'];
+    $('#hudMode').textContent = mode[0]; $('#hudMode').style.background = mode[1];
+    $('#pipeBg').style.setProperty('--pbg', step >= 6 ? '#ff9a3c26' : step >= 5 ? '#ff7fb21c' : '#4c8dff12');
+  }
+  $('#prail').style.height = (prog * 100) + '%';
+  const verts = LV[level].userData.U * LV[level].userData.V + (icing.visible ? 181 * 37 : 0) + spr.count * 50;
+  $('#hudV').textContent = verts.toLocaleString('ru-RU');
+  $('#hudR').innerHTML = rn > 0 ? `Cycles · Сэмплы ${Math.round(rn * 128)}/128 <span class="rbar"><u style="width:${rn * 100}%"></u></span>` : (sm < .2 ? 'Прокручивайте вниз ↓' : `Объект: Пончик`);
+  pr.render(ps, pcam);
+})();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
